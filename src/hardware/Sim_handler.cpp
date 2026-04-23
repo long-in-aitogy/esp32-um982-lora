@@ -14,58 +14,47 @@ TinyGsm        modem(debugger);
 TinyGsm        modem(Serial);
 #endif
 
-void setupGSM() {
+bool startSIM() {
     int retrys = 1;
-    SerialMon.println("Initializing modem... Attempt: " + String(retrys));
+    SerialMon.println("[GSM] Khoi tao modem... So lan thu: " + String(retrys));
     modem.restart();
     String modemInfo = modem.getModemInfo();
     while (modemInfo.length() == 0) {
-        if (retrys > 5) {
-            SerialMon.println("Failed to initialize modem after multiple attempts");
-            return;
+        if (retrys > 10) {
+            SerialMon.println("[GSM] Lay thong tin modem that bai sau nhieu lan thu ! Khoi dong modem that bai !");
+            return false;
         }
-        SerialMon.println("Failed to get modem info, retrying... Attempt: " 
+        SerialMon.println("[GSM] Lay thong tin modem that bai ! So lan thu: " 
             + String(retrys));
         delay(1000);
         modem.restart();
         modemInfo = modem.getModemInfo();
         retrys++;
     }
-    SerialMon.print("Modem Info: ");
+    SerialMon.print("[GSM] Khoi dong modem thanh cong.Thong tin modem: ");
     SerialMon.println(modemInfo);
 
     SerialAT.begin(115200, SERIAL_8N1, RX_TO_MODEM_TX, TX_TO_MODEM_RX);
     delay(3000);
-    
-    SerialMon.println("Connecting to GSM network...");
-    if (!modem.waitForNetwork()) {
-        SerialMon.println("Failed to connect to GSM network");
-        return;
-    }
-    
-    if (modem.isNetworkConnected()) {
-        SerialMon.println("GSM network connected");
-    } else {
-        SerialMon.println("GSM network connection failed");
-        return;
-    }
+    return true;
+}
 
-    int csq = modem.getSignalQuality();
-    SerialMon.print("Signal quality: " + String(csq));
-
-    SerialMon.print("Connecting to APN: ");
-    SerialMon.print(APN);
-    if (!modem.gprsConnect(APN, GPRS_USER, GPRS_PASS)) {
-            SerialMon.println(" - Fail !");
+bool connectGSM() {
+    uint8_t retries = 0;
+    while (retries < 10) {
+        SerialMon.println("[GSM] Dang ket noi mang GSM...");
+        if (modem.isNetworkConnected()) {
+            SerialMon.println("[GSM] Mang GSM da ket noi.");
+            return true;
+        }
+        while (!modem.waitForNetwork()) {
+            SerialMon.println("[GSM] Ket noi mang GSM that bai. Dang thu lai... So lan thu: " + String(retries));
+            retries++;
             delay(10000);
-            return;
+        }
     }
-    SerialMon.println(" - Success !");
-    if (modem.isGprsConnected()) {
-        SerialMon.println("GPRS connected");
-    }
-    IPAddress local = modem.localIP();
-    SerialMon.println("Local IP: " + local.toString());
+    SerialMon.println("[GSM] Ket noi mang GSM that bai sau " + String(retries) + " lan thu. Ket thuc ket noi !");
+    return false;
 }
 
 #endif // GSM_CODE

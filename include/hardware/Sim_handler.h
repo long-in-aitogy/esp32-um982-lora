@@ -27,6 +27,7 @@ extern TinyGsm        modem;
 extern TinyGsm        modem;
 #endif
 
-void setupGSM();
+bool startSIM();
+bool connectGSM();
 
 #endif
