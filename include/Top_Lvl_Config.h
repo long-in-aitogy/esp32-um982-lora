@@ -4,12 +4,6 @@
 #ifndef TOP_LVL_CONFIG_H
 #define TOP_LVL_CONFIG_H
 
-// ================= CẤU HÌNH DEBUG =================
-
-#ifndef DEBUG_MODE
-#define DEBUG_MODE true // ghi debug log ra Serial Monitor, chưa sử dụng
-#endif
-
 // ================= CẤU HÌNH KHỞI TẠO =================
 #ifndef WIFI_LORA_32_V4
 #define WIFI_LORA_32_V4
@@ -29,6 +23,7 @@
 
 #define TCP_IP 0
 #define LORA_SERIAL 1
+
 #ifndef NTRIP_COMMUNICATION_PROTOCOL
 #define NTRIP_COMMUNICATION_PROTOCOL TCP_IP // Chọn giữa TCP_IP hoặc LORA_SERIAL
 #endif

@@ -55,6 +55,6 @@ inline constexpr char TOPIC_PUB_RAW_KSXT[] = "tdm2402/um980/raw/ksxt";
 inline constexpr char TOPIC_PUB_HEALTH[] = "tdm2402/um980/health";
 
 // ================= CẤU HÌNH KIỂM TRA SỨC KHOẺ =================
-const unsigned long HEALTH_INTERVAL = 30000;
+const unsigned long HEALTH_INTERVAL = 30000; // chu kỳ gửi thông tin sức khoẻ (ms)
 
 #endif // PROG_CONFIG_H
