@@ -22,6 +22,14 @@ Firmware dành cho vi điều khiển ESP32 (ví dụ board TDM2402) đóng vai 
     - `ArduinoJson` để xử lý JSON.
 
 ## Tổ chức mã nguồn:
+### Tổ chức nhánh:
+- `main`: Nhánh chính chứa mã nguồn ổn định, đã được kiểm tra kỹ lưỡng. Chỉ được nhận merge từ nhánh `develop` dưới dạng squash commit để giữ lịch sử sạch sẽ. Không được phép merge trực tiếp vào `main` từ các nhánh tính năng hoặc test.
+- `develop`: Nhánh phát triển, cũng là nhánh mặc định trên GitHub, nơi các tính năng mới được thêm vào và thử nghiệm. Sau khi hoàn thiện và kiểm tra, các thay đổi sẽ được merge vào nhánh `main`. Squash commit từ `main` phải được merge ngược lại vào `develop` ngay sau khi merge để đồng bộ lịch sử.
+- `feature/<tên-tính-năng>`: Các nhánh tính năng riêng biệt để phát triển các tính năng mới hoặc sửa lỗi cụ thể. Sau khi hoàn thành, sẽ được merge vào `develop`.
+- `feature-test/<tên-tính-năng>`: Các nhánh riêng để viết và chạy unit test cho các tính năng tương ứng với các nhánh `feature/<tên-tính-năng>`. Sau khi hoàn thành, sẽ được merge vào `feature/<tên-tính-năng>`. Khi nhánh `feature/<tên-tính-năng>` bị xoá, nhánh `feature-test/<tên-tính-năng>` sẽ được xoá.
+- `documentation`: Các nhánh riêng để viết tài liệu hướng dẫn sử dụng, cấu hình, v.v. Sau khi hoàn thành phần tài liệu, sẽ được merge vào `develop`. Nhánh này chỉ được phép merge vào `develop` và cũng chỉ được nhận merge từ `develop` để đồng bộ.
+
+### Tổ chức thư mục:
 ```
 ├── .pio/           # Thư mục do PlatformIO tạo ra chứa file biên dịch, 
 |               thư viện đã cài, v.v. Không chỉnh sửa trực tiếp.
