@@ -7,6 +7,6 @@
 
 // ================= HÀM CẤU HÌNH WI-FI =================
 
-void setupWiFi();
+bool setupWiFi();
 
 #endif

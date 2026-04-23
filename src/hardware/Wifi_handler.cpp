@@ -6,7 +6,7 @@
 #include "Prog_Config.h"
 #include "hardware/Wifi_handler.h"
 
-void setupWiFi() {
+bool setupWiFi() {
   Serial.print("\n[WIFI] Dang ket noi mang: ");
   Serial.println(WIFI_SSID);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
@@ -15,12 +15,13 @@ void setupWiFi() {
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
-    if (++attempt > 30) {
+    if (++attempt > 10) {
       Serial.println("\n[ERROR] Ket noi WiFi that bai!");
-      attempt = 0;
+      return false;
     }
   }
   Serial.println("\n[WIFI] Ket noi THANH CONG! IP: " + WiFi.localIP().toString());
+  return true;
 }
 
 #endif // WIFI_CODE
