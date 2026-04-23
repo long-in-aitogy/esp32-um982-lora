@@ -16,7 +16,7 @@ bool loraWanAdr = LORAWAN_ADR;
 bool keepNet = LORAWAN_NET_RESERVE;
 bool isTxConfirmed = TX_CONFIRMED;
 
-void prepareTxFrame( uint8_t port )
+void prepareTxFrame()
 {
     appDataSize = 4;
     appData[0] = 0x00;

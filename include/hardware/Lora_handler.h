@@ -45,6 +45,6 @@ extern bool keepNet;
 extern bool isTxConfirmed;
 
 // ================= KHAI BÁO HÀM =================
-void prepareTxFrame( uint8_t port );
+void prepareTxFrame();
 void setupLoraWan();
 #endif
