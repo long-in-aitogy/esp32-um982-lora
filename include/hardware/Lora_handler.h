@@ -27,6 +27,24 @@
 
 #include <LoRaWan_APP.h>
 
+// ================= KHAI BÁO CÁC BIẾN TOÀN CỤC =================
+
+extern DeviceClass_t loraWanClass;
+extern LoRaMacRegion_t loraWanRegion;
+
+extern uint8_t devEui[];
+extern uint8_t appEui[];
+extern uint8_t appKey[];
+extern uint16_t userChannelsMask[6];
+extern uint8_t appPort;
+extern uint8_t confirmedNbTrials;
+
+extern bool overTheAirActivation;
+extern bool loraWanAdr;
+extern bool keepNet;
+extern bool isTxConfirmed;
+
+// ================= KHAI BÁO HÀM =================
 void prepareTxFrame( uint8_t port );
 void setupLoraWan();
 #endif
