@@ -74,18 +74,29 @@ void setup()
 
     // Khởi tạo giao tiếp với UM980
     Serial1.begin(GNSS_BAUD, SERIAL_8N1, RX_GNSS, TX_GNSS);
+    bool networkConnected = false;
 
+    connection_init:
 #if CONNECT_USING_WIFI
     Serial.println("[SETUP] Su dung ket noi WIFI");
-    setupWiFi((char *)WIFI_SSID, (char *)WIFI_PASS);
+    networkConnected = setupWiFi();
 #endif
 #if CONNECT_USING_4G
     Serial.println("[SETUP] Su dung ket noi SIM/GSM");
-    setupGSM();
+    if (startSIM()) {
+        if (connectGSM()) {
+            networkConnected = true;
+        }
+    }
 #endif
-
-    setupMQTT();
-    setupNTRIP();
+    if (networkConnected) {
+        Serial.println("[SETUP] Ket noi mang thanh cong!");
+        setupMQTT();
+        setupNTRIP();
+    } else {
+        Serial.println("[ERROR] Khong the ket noi mang. Vui long kiem tra cau hinh va thu lai.");
+        goto connection_init;
+    }
 
     Serial.println("=========================================");
     Serial.println("        KHOI DONG HOAN TAT               ");
