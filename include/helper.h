@@ -24,5 +24,6 @@ extern String targetGGA;
 
 // ================= ĐỊNH NGHĨA CÁC HÀM =================
 void sendDeviceHealth();
+int gnssRoverParseAndMqtt();
 
 #endif
