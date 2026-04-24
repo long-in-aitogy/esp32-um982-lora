@@ -3,6 +3,9 @@
 #include "Prog_Config.h"
 
 // ================= ĐỊNH NGHĨA CÁC ĐỐI TƯỢNG CẦN CHO KẾT NỐI =================
+#ifdef UNIT_TEST
+PubSubClient mqtt;
+#else
 #if CONNECT_USING_WIFI
 #include "hardware/Wifi_handler.h"
 static WiFiClient espClient;
@@ -12,8 +15,8 @@ static WiFiClient espClient;
 extern TinyGsm modem;
 static TinyGsmClient espClient(modem);
 #endif
-
 PubSubClient mqtt(espClient);
+#endif
 
 // ================= ĐỊNH NGHĨA HÀM =================
 
@@ -24,6 +27,9 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   Serial.print("\n[MQTT DOWNLINK] Lenh: ");
   Serial.println(cmd);
   
+  #ifdef UNIT_TEST
+  Serial_ Serial1 = SerialFakeProxy(ArduinoFakeInstance(Serial));
+  #endif
   // Đẩy lệnh xuống UM980 qua Serial1
   Serial1.print(cmd);
   Serial1.print("\r\n");
