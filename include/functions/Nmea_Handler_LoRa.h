@@ -3,7 +3,6 @@
 
 #include "Top_Lvl_Config.h"
 #include "Prog_Config.h"
-#include "hardware/Lora_handler.h"
 
 int loopNmeaLoRa();
 

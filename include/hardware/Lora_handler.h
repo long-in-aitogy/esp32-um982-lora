@@ -51,6 +51,6 @@ extern uint8_t *ReceivedBuffer;
 extern uint8_t ReceivedBufferSize;
 
 // ================= KHAI BÁO HÀM =================
-void downLinkDataHandle(McpsIndication_t *mcpsIndication);
+extern void downLinkDataHandle(McpsIndication_t *mcpsIndication);
 int loraWanMain();
 #endif
