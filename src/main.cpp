@@ -36,7 +36,9 @@ void setup()
     if (networkConnected) {
         Serial.println("[SETUP] Ket noi mang thanh cong!");
         setupMQTT();
+        #if NMEA_COMMUNICATION_PROTOCOL == TCP_IP
         setupNTRIP();
+        #endif
     } else {
         Serial.println("[ERROR] Khong the ket noi mang. Vui long kiem tra cau hinh va thu lai.");
         goto connection_init;
@@ -51,7 +53,12 @@ void loop()
 {
     // 1. Duy trì kết nối mạng
     loopMQTT();
+    #if NMEA_COMMUNICATION_PROTOCOL == TCP_IP
     loopNTRIP(latestGGA);
+    #else
+    loraWanMain();
+    loopNmeaLoRa();
+    #endif
 
     // === KIỂM TRA VÀ GỬI THÔNG TIN SỨC KHỎE ===
     if (millis() - lastHealthCheck >= HEALTH_INTERVAL)

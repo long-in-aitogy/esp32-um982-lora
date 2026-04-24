@@ -1,35 +1,89 @@
 #include "hardware/Lora_handler.h"
 
-extern DeviceClass_t loraWanClass = LORAWAN_CLASS;
-extern LoRaMacRegion_t loraWanRegion = ACTIVE_REGION;
+DeviceClass_t loraWanClass = LORAWAN_CLASS;
+LoRaMacRegion_t loraWanRegion = ACTIVE_REGION;
 
-extern uint8_t devEui[] = { 0x22, 0x32, 0x33, 0x00, 0x00, 0x88, 0x88, 0x02 };
-extern uint8_t appEui[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-extern uint8_t appKey[] = { 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88,
-            0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x66, 0x01 };
-extern uint16_t userChannelsMask[6]={ 0x00FF,0x0000,0x0000,0x0000,0x0000,0x0000 };
-extern uint8_t appPort = 2;
-extern uint8_t confirmedNbTrials = 4;
+uint8_t devEui[] = {0x22, 0x32, 0x33, 0x00, 0x00, 0x88, 0x88, 0x02};
+uint8_t appEui[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+uint8_t appKey[] = {0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88,
+                    0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x66, 0x01};
+uint8_t nwkSKey[] = {0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88,
+                     0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x66, 0x01};
+uint8_t appSKey[] = {0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88,
+                     0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x66, 0x01};
+uint32_t devAddr = (uint32_t)0x26011BDA;
+uint16_t userChannelsMask[6] = {0x00FF, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000};
+uint8_t appPort = 2;
+uint8_t confirmedNbTrials = 4;
 
-extern bool overTheAirActivation = LORAWAN_OTA;
-extern bool loraWanAdr = LORAWAN_ADR;
-extern bool keepNet = LORAWAN_NET_RESERVE;
-extern bool isTxConfirmed = TX_CONFIRMED;
+bool overTheAirActivation = LORAWAN_OTA;
+bool loraWanAdr = LORAWAN_ADR;
+bool keepNet = LORAWAN_NET_RESERVE;
+bool isTxConfirmed = TX_CONFIRMED;
 
-void prepareTxFrame( uint8_t port )
+uint32_t appTxDutyCycle = 1000; // 1000ms = 1s
+
+uint8_t *ReceivedBuffer;
+uint8_t ReceivedBufferSize;
+
+void downLinkDataHandle(McpsIndication_t *mcpsIndication)
 {
-    appDataSize = 4;
-    appData[0] = 0x00;
-    appData[1] = 0x01;
-    appData[2] = 0x02;
-    appData[3] = 0x03;
+    Serial.printf("+REV DATA:%s,RXSIZE %d,PORT %d\r\n", mcpsIndication->RxSlot ? "RXWIN2" : "RXWIN1", mcpsIndication->BufferSize, mcpsIndication->Port);
+    Serial.print("+REV DATA:");
+    free(ReceivedBuffer);
+    ReceivedBuffer = nullptr;
+    ReceivedBufferSize = mcpsIndication->BufferSize;
+    ReceivedBuffer = new uint8_t[ReceivedBufferSize];
+    for (uint8_t i = 0; i < mcpsIndication->BufferSize; i++)
+    {
+        ReceivedBuffer[i] = mcpsIndication->Buffer[i];
+        Serial.printf("%02X", mcpsIndication->Buffer[i]);
+    }
+    Serial.println();
+    uint32_t color = mcpsIndication->Buffer[0] << 16 | mcpsIndication->Buffer[1] << 8 | mcpsIndication->Buffer[2];
+    #if (LoraWan_RGB == 1)
+        turnOnRGB(color, 5000);
+        turnOffRGB();
+    #endif
 }
 
-void setupLoraWan()
+int loraWanMain()
 {
-    #ifdef DUMP_AT_COMMANDS
-	enableAt();
+    switch (deviceState)
+    {
+        case DEVICE_STATE_INIT:
+        {
+    #if (LORAWAN_DEVEUI_AUTO)
+            LoRaWAN.generateDeveuiByChipID();
     #endif
-	deviceState = DEVICE_STATE_INIT;
-	LoRaWAN.ifskipjoin();
+            LoRaWAN.init(loraWanClass, loraWanRegion);
+            LoRaWAN.setDefaultDR(3);
+            break;
+        }
+        case DEVICE_STATE_JOIN:
+        {
+            LoRaWAN.join();
+            deviceState = DEVICE_STATE_CYCLE;
+            break;
+        }
+        case DEVICE_STATE_CYCLE:
+        {
+            // Schedule next packet transmission
+            txDutyCycleTime = appTxDutyCycle;
+            LoRaWAN.cycle(txDutyCycleTime);
+            deviceState = DEVICE_STATE_SLEEP;
+            break;
+        }
+        case DEVICE_STATE_SLEEP:
+        {
+            LoRaWAN.sleep(loraWanClass);
+            break;
+        }
+        default:
+        {
+            deviceState = DEVICE_STATE_INIT;
+            break;
+        }
+    }
+    return 0;
 }

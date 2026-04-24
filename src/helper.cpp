@@ -41,7 +41,6 @@ int gnssRoverParseAndMqtt()
                 {
                     jsonPayload = parseGGA_toJSON(ggaData);
                 }
-                
             }
             publishRaw(nmeaBuffer, false);
             publishData(jsonPayload, false);
@@ -58,22 +57,28 @@ int gnssRoverParseAndMqtt()
     }
 }
 
-void sendDeviceHealth() {
-  // 1. Lấy các thông số hệ thống
-  unsigned long uptime_s = millis() / 1000;
-  uint32_t freeHeap = ESP.getFreeHeap();
+void sendDeviceHealth()
+{
+    // 1. Lấy các thông số hệ thống
+    unsigned long uptime_s = millis() / 1000;
+    uint32_t freeHeap = ESP.getFreeHeap();
 
-  #if CONNECT_USING_WIFI
+#if CONNECT_USING_WIFI
     int32_t rssi = WiFi.RSSI();
     String connected_via = "WiFi";
-  #endif
-  #if CONNECT_USING_4G
+#endif
+#if CONNECT_USING_4G
     int32_t rssi = modem.getSignalQuality();
     String connected_via = "GSM";
-  #endif
-  
-  bool mqttOk = isMqttConnected();
-  bool ntripOk = isNtripConnected();
+#endif
+
+    bool mqttOk = isMqttConnected();
+#if NMEA_COMMUNICATION_PROTOCOL == TCP_IP
+    bool ntripOk = isNtripConnected();
+#else
+// Nếu dùng LoRa thì không có NTRIP qua TCP/IP, sẽ có cách khác để kiểm tra. Hiện chưa có mã nguồn cho LoRa nên tạm thời để false.
+    bool ntripOk = false;
+#endif
   bool gnssOk = (latestGGA.length() > 10); // Nếu có chuỗi NMEA hợp lệ
   
   // 2. Đóng gói thành JSON

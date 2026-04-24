@@ -14,7 +14,14 @@ extern TinyGsm modem;
 #endif
 
 #include "functions/MQTT_Manager.h"
+
+#if NMEA_COMMUNICATION_PROTOCOL == TCP_IP
 #include "functions/NTRIP_Handler_IP.h"
+#else
+#include "hardware/Lora_handler.h"
+#include "functions/Nmea_Handler_LoRa.h"
+#endif
+
 #include "functions/NMEA_Parser.h"
 #include "DataStructs.h"
 

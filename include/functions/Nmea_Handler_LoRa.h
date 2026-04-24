@@ -1,0 +1,9 @@
+#ifndef NTRIP_HANDLER_LORA_H
+#define NTRIP_HANDLER_LORA_H
+
+#include "Top_Lvl_Config.h"
+#include "Prog_Config.h"
+
+int loopNmeaLoRa();
+
+#endif

@@ -29,10 +29,10 @@ inline constexpr char GPRS_PASS[] = "";
 // ================= CẤU HÌNH NTRIP =================
 inline constexpr int NTRIP_MODE = 3; // 1: Chỉ gửi GGA khi có yêu cầu; 2: Gửi GGA mỗi khi có thay đổi; 3: Gửi GGA đều đặn mỗi 10s
 
-#if NTRIP_COMMUNICATION_PROTOCOL == TCP_IP
+#if NMEA_COMMUNICATION_PROTOCOL == TCP_IP
 inline constexpr char NTRIP_CASTER_IP[] = "aitogy.com.vn";
 inline constexpr uint16_t NTRIP_CASTER_PORT = 2101;
-#elif NTRIP_COMMUNICATION_PROTOCOL == LORA_SERIAL
+#elif NMEA_COMMUNICATION_PROTOCOL == LORA_SERIAL
 #define NTRIP_LORA_SERIAL_CONFIG
 #endif
 
