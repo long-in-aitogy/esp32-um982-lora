@@ -11,11 +11,11 @@ extern PubSubClient mqtt;
 
 // ================= KHAI BÁO HÀM =================
 
-void setupMQTT();
-void loopMQTT();
-void publishData(String payload, bool isGGA);
-void publishRaw(String payload, bool isGGA);
-void publishHealth(String payload); // Thêm hàm gửi thông tin sức khỏe
+int setupMQTT();
+int loopMQTT();
+int publishData(String payload, bool isGGA);
+int publishRaw(String payload, bool isGGA);
+int publishHealth(String payload); // Thêm hàm gửi thông tin sức khỏe
 bool isMqttConnected();             // Thêm hàm lấy trạng thái kết nối MQTT
 
 #endif
