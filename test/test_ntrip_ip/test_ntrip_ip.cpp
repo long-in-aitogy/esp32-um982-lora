@@ -19,10 +19,11 @@ void tearDown(void) {}
 void setup() {}
 
 void loop() {}
-#endif
+#else
 
 int main() {
   UNITY_BEGIN();
   
   return UNITY_END();
 }
+#endif
