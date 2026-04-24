@@ -6,6 +6,7 @@
 #include <Arduino.h>
 #ifdef UNIT_TEST
 #include "mockPubSubClient.h"
+extern String command;
 #else
 #include <PubSubClient.h>
 #endif
@@ -17,6 +18,7 @@ extern PubSubClient mqtt;
 
 int setupMQTT();
 int loopMQTT();
+void mqttCallback(char* topic, byte* payload, unsigned int length);
 int publishData(String payload, bool isGGA);
 int publishRaw(String payload, bool isGGA);
 int publishHealth(String payload); // Thêm hàm gửi thông tin sức khỏe

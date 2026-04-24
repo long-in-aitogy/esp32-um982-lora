@@ -5,6 +5,7 @@
 // ================= ĐỊNH NGHĨA CÁC ĐỐI TƯỢNG CẦN CHO KẾT NỐI =================
 #ifdef UNIT_TEST
 PubSubClient mqtt;
+String command;
 #else
 #if CONNECT_USING_WIFI
 #include "hardware/Wifi_handler.h"
@@ -28,11 +29,12 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   Serial.println(cmd);
   
   #ifdef UNIT_TEST
-  Serial_ Serial1 = SerialFakeProxy(ArduinoFakeInstance(Serial));
-  #endif
+  command = cmd; // Lưu lệnh vào biến toàn cục để test
+  #else
   // Đẩy lệnh xuống UM980 qua Serial1
   Serial1.print(cmd);
   Serial1.print("\r\n");
+  #endif
 }
 
 int setupMQTT() {

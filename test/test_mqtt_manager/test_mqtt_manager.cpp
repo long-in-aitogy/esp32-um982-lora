@@ -4,23 +4,39 @@
 #include "functions/MQTT_Manager.h"
 #include "Prog_Config.h"
 
+using namespace fakeit;
+
 extern int connectMQTT();
 
 void setUp(void) {
+  ArduinoFakeReset();
   mqtt.mockReset();
+
+  fakeit::When(OverloadedMethod(ArduinoFake(Serial), print, size_t(const char[]))).AlwaysReturn(1);
+  fakeit::When(OverloadedMethod(ArduinoFake(Serial), print, size_t(int, int))).AlwaysReturn(1);
+  fakeit::When(OverloadedMethod(ArduinoFake(Serial), println, size_t(const char[]))).AlwaysReturn(1);
+  fakeit::When(OverloadedMethod(ArduinoFake(Serial), println, size_t(const String&))).AlwaysReturn(1);
+
+  fakeit::When(OverloadedMethod(ArduinoFake(Function), random, long(long))).Return(1234);
+  fakeit::When(Method(ArduinoFake(Function), delay)).AlwaysReturn();
 }
 
 void tearDown(void) {}
 
 void test_setupMQTT_sets_server_and_callback(void) {
+  TEST_MESSAGE("Testing Setup MQTT");
   int rc = setupMQTT();
 
+  TEST_MESSAGE("Testing Setup MQTT: Testing the function setupMQTT");
   TEST_ASSERT_EQUAL(0, rc);
+  TEST_MESSAGE("Testing Setup MQTT: Getting server");
   TEST_ASSERT_EQUAL_STRING(MQTT_SERVER, mqtt.server_.c_str());
+  TEST_MESSAGE("Testing Setup MQTT: Getting port");
   TEST_ASSERT_EQUAL_UINT16(MQTT_PORT, mqtt.port_);
 }
 
 void test_connectMQTT_subscribes_when_connect_success(void) {
+  TEST_MESSAGE("Testing Connect MQTT: Simulating successful connection and subscription");
   mqtt.mockSetConnectResult(true);
 
   int rc = connectMQTT();
@@ -33,6 +49,7 @@ void test_connectMQTT_subscribes_when_connect_success(void) {
 }
 
 void test_publishData_routes_to_gga_topic(void) {
+  TEST_MESSAGE("Testing Publish Data...");
   mqtt.mockSetConnected(true);
 
   int rc = publishData("$GGA,abc", true);
@@ -44,12 +61,24 @@ void test_publishData_routes_to_gga_topic(void) {
 }
 
 void test_publishData_returns_error_when_disconnected(void) {
+  TEST_MESSAGE("Testing Publish Data: Simulating disconnected state");
   mqtt.mockSetConnected(false);
 
   int rc = publishData("payload", false);
 
   TEST_ASSERT_EQUAL(-1, rc);
   TEST_ASSERT_EQUAL(0, mqtt.publishCallCount_);
+}
+
+void test_receive_mqtt_callback_and_forward_to_serial(void) {
+  TEST_MESSAGE("Testing MQTT Callback: Simulating receiving MQTT message and forwarding to Serial");
+  mqtt.mockSetConnected(true);
+
+  char* testTopic = "tdm2402/um980/cmd";
+  char* testPayload = "TEST_CMD";
+  mqttCallback(testTopic, (byte*)testPayload, strlen(testPayload));
+
+  TEST_ASSERT_EQUAL_STRING(testPayload, command.c_str());
 }
 
 #ifndef NATIVE_BUILD
@@ -59,6 +88,7 @@ void setup() {
   RUN_TEST(test_connectMQTT_subscribes_when_connect_success);
   RUN_TEST(test_publishData_routes_to_gga_topic);
   RUN_TEST(test_publishData_returns_error_when_disconnected);
+  RUN_TEST(test_receive_mqtt_callback_and_forward_to_serial);
   UNITY_END();
 }
 
@@ -70,6 +100,7 @@ int main() {
   RUN_TEST(test_connectMQTT_subscribes_when_connect_success);
   RUN_TEST(test_publishData_routes_to_gga_topic);
   RUN_TEST(test_publishData_returns_error_when_disconnected);
+  RUN_TEST(test_receive_mqtt_callback_and_forward_to_serial);
   return UNITY_END();
 }
 #endif
