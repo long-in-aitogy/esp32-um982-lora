@@ -5,4 +5,6 @@
 #include "Prog_Config.h"
 #include "hardware/Lora_handler.h"
 
+int loopNmeaLoRa();
+
 #endif
