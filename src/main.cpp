@@ -55,6 +55,8 @@ void loop()
     loopMQTT();
     #if NTRIP_COMMUNICATION_PROTOCOL == TCP_IP
     loopNTRIP(latestGGA);
+    #else
+    loraWanMain();
     #endif
 
     // === KIỂM TRA VÀ GỬI THÔNG TIN SỨC KHỎE ===
