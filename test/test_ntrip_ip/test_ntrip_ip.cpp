@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include <unity.h>
 
+/*=========== SETTING UP FAKEIT ============*/
+
 void setUp(void) {
   ArduinoFakeReset();
 
@@ -14,6 +16,10 @@ void setUp(void) {
 }
 
 void tearDown(void) {}
+
+/*=========== TESTS ============*/
+
+/*=========== MAIN FUNCTIONS ============*/
 
 #ifndef NATIVE_BUILD
 void setup() {}

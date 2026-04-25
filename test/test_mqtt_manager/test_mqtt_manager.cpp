@@ -4,7 +4,7 @@
 #include "functions/MQTT_Manager.h"
 #include "Prog_Config.h"
 
-using namespace fakeit;
+/*=========== SETTING UP FAKEIT ============*/
 
 extern int connectMQTT();
 
@@ -22,6 +22,8 @@ void setUp(void) {
 }
 
 void tearDown(void) {}
+
+/*=========== TESTS ============*/
 
 void test_setupMQTT_sets_server_and_callback(void) {
   TEST_MESSAGE("Testing Setup MQTT");
@@ -87,6 +89,8 @@ void test_receive_mqtt_callback_and_forward_to_serial(void) {
 
   TEST_ASSERT_EQUAL_STRING(testPayload, command.c_str());
 }
+
+/*=========== MAIN FUNCTIONS ============*/
 
 #ifndef NATIVE_BUILD
 void setup() {

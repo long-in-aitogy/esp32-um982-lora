@@ -3,7 +3,8 @@
 
 #include "Top_Lvl_Config.h"
 #include "Prog_Config.h"
+#include <LoRaWan_APP.h>
 
-int loopNmeaLoRa();
+int pushNmeaLoRaToGnss(McpsIndication_t *mcpsIndication);
 
 #endif
