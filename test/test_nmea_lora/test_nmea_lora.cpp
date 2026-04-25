@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include <unity.h>
 
+#include "hardware/Lora_handler.h"
+
 void setUp(void) {
   ArduinoFakeReset();
 

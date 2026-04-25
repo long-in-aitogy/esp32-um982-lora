@@ -37,37 +37,44 @@ void test_setupMQTT_sets_server_and_callback(void) {
 
 void test_connectMQTT_subscribes_when_connect_success(void) {
   TEST_MESSAGE("Testing Connect MQTT: Simulating successful connection and subscription");
+  int connectCallCount_old = mqtt.connectCallCount_;
+  int subscribeCallCount_old = mqtt.subscribeCallCount_;
+  
   mqtt.mockSetConnectResult(true);
 
   int rc = connectMQTT();
 
   TEST_ASSERT_EQUAL(0, rc);
   TEST_ASSERT_TRUE(mqtt.connected());
-  TEST_ASSERT_EQUAL(1, mqtt.connectCallCount_);
-  TEST_ASSERT_EQUAL(1, mqtt.subscribeCallCount_);
+  TEST_ASSERT_EQUAL(1, mqtt.connectCallCount_ - connectCallCount_old);
+  TEST_ASSERT_EQUAL(1, mqtt.subscribeCallCount_ - subscribeCallCount_old);
   TEST_ASSERT_EQUAL_STRING(TOPIC_SUB_CMD, mqtt.lastSubscribedTopic_.c_str());
 }
 
 void test_publishData_routes_to_gga_topic(void) {
   TEST_MESSAGE("Testing Publish Data...");
+  int publishCallCount_old = mqtt.publishCallCount_;
+
   mqtt.mockSetConnected(true);
 
   int rc = publishData("$GGA,abc", true);
 
   TEST_ASSERT_EQUAL(0, rc);
-  TEST_ASSERT_EQUAL(1, mqtt.publishCallCount_);
+  TEST_ASSERT_EQUAL(1, mqtt.publishCallCount_ - publishCallCount_old);
   TEST_ASSERT_EQUAL_STRING(TOPIC_PUB_DATA_GGA, mqtt.lastPublishedTopic_.c_str());
   TEST_ASSERT_EQUAL_STRING("$GGA,abc", mqtt.lastPublishedPayload_.c_str());
 }
 
 void test_publishData_returns_error_when_disconnected(void) {
   TEST_MESSAGE("Testing Publish Data: Simulating disconnected state");
+  int publishCallCount_old = mqtt.publishCallCount_;
+
   mqtt.mockSetConnected(false);
 
   int rc = publishData("payload", false);
 
   TEST_ASSERT_EQUAL(-1, rc);
-  TEST_ASSERT_EQUAL(0, mqtt.publishCallCount_);
+  TEST_ASSERT_EQUAL(0, mqtt.publishCallCount_ - publishCallCount_old);
 }
 
 void test_receive_mqtt_callback_and_forward_to_serial(void) {

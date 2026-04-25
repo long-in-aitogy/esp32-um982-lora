@@ -1,5 +1,21 @@
 #include "hardware/Lora_handler.h"
 
+#ifdef UNIT_TEST
+#include <cstdarg>
+#include <cstdio>
+
+static void serialPrintfCompat(const char* format, ...) {
+    char buffer[256];
+    va_list args;
+    va_start(args, format);
+    vsnprintf(buffer, sizeof(buffer), format, args);
+    va_end(args);
+    Serial.print(buffer);
+}
+#else
+#define serialPrintfCompat(...) Serial.printf(__VA_ARGS__)
+#endif
+
 DeviceClass_t loraWanClass = LORAWAN_CLASS;
 LoRaMacRegion_t loraWanRegion = ACTIVE_REGION;
 
@@ -28,7 +44,7 @@ uint8_t ReceivedBufferSize;
 
 void downLinkDataHandle(McpsIndication_t *mcpsIndication)
 {
-    Serial.printf("+REV DATA:%s,RXSIZE %d,PORT %d\r\n", mcpsIndication->RxSlot ? "RXWIN2" : "RXWIN1", mcpsIndication->BufferSize, mcpsIndication->Port);
+    serialPrintfCompat("+REV DATA:%s,RXSIZE %d,PORT %d\r\n", mcpsIndication->RxSlot ? "RXWIN2" : "RXWIN1", mcpsIndication->BufferSize, mcpsIndication->Port);
     Serial.print("+REV DATA:");
     free(ReceivedBuffer);
     ReceivedBuffer = nullptr;
@@ -37,7 +53,7 @@ void downLinkDataHandle(McpsIndication_t *mcpsIndication)
     for (uint8_t i = 0; i < mcpsIndication->BufferSize; i++)
     {
         ReceivedBuffer[i] = mcpsIndication->Buffer[i];
-        Serial.printf("%02X", mcpsIndication->Buffer[i]);
+        serialPrintfCompat("%02X", mcpsIndication->Buffer[i]);
     }
     Serial.println();
     uint32_t color = mcpsIndication->Buffer[0] << 16 | mcpsIndication->Buffer[1] << 8 | mcpsIndication->Buffer[2];

@@ -25,11 +25,7 @@
 #define TX_CONFIRMED false
 #endif
 
-#ifndef UNIT_TEST
 #include <LoRaWan_APP.h>
-#else
-#include "stdint.h"
-#endif
 
 // ================= KHAI BÁO CÁC BIẾN TOÀN CỤC =================
 
