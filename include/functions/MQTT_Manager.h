@@ -4,7 +4,7 @@
 // ============ GẮN CÁC THƯ VIỆN CẦN THIẾT ==============
 
 #include <Arduino.h>
-#ifdef UNIT_TEST
+#ifdef NATIVE_BUILD
 #include "mockPubSubClient.h"
 extern String command;
 #else

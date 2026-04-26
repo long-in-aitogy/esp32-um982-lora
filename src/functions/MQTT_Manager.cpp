@@ -3,7 +3,7 @@
 #include "Prog_Config.h"
 
 // ================= ĐỊNH NGHĨA CÁC ĐỐI TƯỢNG CẦN CHO KẾT NỐI =================
-#ifdef UNIT_TEST
+#ifdef NATIVE_BUILD
 PubSubClient mqtt;
 String command;
 #else
@@ -28,7 +28,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   Serial.print("\n[MQTT DOWNLINK] Lenh: ");
   Serial.println(cmd);
   
-  #ifdef UNIT_TEST
+  #ifdef NATIVE_BUILD
   command = cmd; // Lưu lệnh vào biến toàn cục để test
   #else
   // Đẩy lệnh xuống UM980 qua Serial1

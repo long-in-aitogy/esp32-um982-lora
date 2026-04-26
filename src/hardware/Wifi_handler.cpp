@@ -20,7 +20,7 @@ bool setupWiFi() {
       return false;
     }
   }
-  Serial.println("\n[WIFI] Ket noi THANH CONG! IP: " + WiFi.localIP().toString());
+  Serial.println("\n[WIFI] Ket noi THANH CONG! IP: " + WiFi.ipToString(WiFi.localIP()));
   return true;
 }
 

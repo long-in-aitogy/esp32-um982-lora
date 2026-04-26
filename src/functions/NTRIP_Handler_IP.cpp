@@ -78,6 +78,11 @@ int connectNTRIP() {
 
 int loopNTRIP(String currentGGA) {
   int returnCode = NTRIP_MODE; // returnCode = NTRIP_MODE + ntripClient.available() * 4
+#ifdef UNIT_TEST
+  auto& ntripOutput = Serial;
+#else
+  auto& ntripOutput = Serial1;
+#endif
   // 1. Quản lý mất kết nối
   if (!ntripClient.connected()) {
     isIcyOk = false;
@@ -112,7 +117,7 @@ int loopNTRIP(String currentGGA) {
       int bytesRead = ntripClient.read(buffer, sizeof(buffer));
       
       // Bơm trực tiếp byte thô vào cổng Serial1 cho module định vị
-      Serial1.write(buffer, bytesRead); 
+      ntripOutput.write(buffer, bytesRead); 
       
       // In dấu chấm nhỏ để biết đang nhận RTCM (bỏ comment nếu cần debug)
       // Serial.print("*"); 
