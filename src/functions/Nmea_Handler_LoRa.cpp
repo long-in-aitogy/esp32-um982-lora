@@ -16,17 +16,18 @@ int pushNmeaLoRaToGnss(McpsIndication_t *mcpsIndication) {
     #endif
     if (mcpsIndication->BufferSize > 0)
     {
+        if (mcpsIndication->Buffer == nullptr) {
+            serialOut.println("[NMEA over LoRA] Loi: Buffer rong!");
+            return -2;
+        }
+
         serialOut.write(mcpsIndication->Buffer, mcpsIndication->BufferSize);
         serialOut.println("[NMEA over LoRA] Da nhan duoc NMEA qua LoRA, da gui den mach RTK!");
         serialOut.println("[NMEA over LoRA] Kich thuoc du lieu: " + String(mcpsIndication->BufferSize) + " bytes");
-
-        String payload = "";
-        for (uint8_t i = 0; i < mcpsIndication->BufferSize; i++) {
-            payload += static_cast<char>(mcpsIndication->Buffer[i]);
-        }
-        serialOut.println("[NMEA over LoRA] Noi dung du lieu: " + payload);
+        serialOut.println("[NMEA over LoRA] Noi dung du lieu: " + String((char*)mcpsIndication->Buffer));
         return 0;
     }
+    serialOut.println("[NMEA over LoRA] Loi: Buffer co do dai bang 0!");
     return -1;
 }
 

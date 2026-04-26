@@ -25,6 +25,7 @@ void tearDown(void) {}
 /*=========== TESTS ============*/
 
 void test_downLinkDataHandle() {
+    TEST_MESSAGE("Testing downLinkDataHandle with valid McpsIndication_t...");
     McpsIndication_t mcpsIndication;
     mcpsIndication.RxSlot = RX_SLOT_WIN_1;
     mcpsIndication.BufferSize = 3;
@@ -39,6 +40,7 @@ void test_downLinkDataHandle() {
 }
 
 void test_pushNmeaLoRaToGnss_success() {
+    TEST_MESSAGE("Testing pushNmeaLoRaToGnss with valid McpsIndication_t...");
     McpsIndication_t mcpsIndication;
     mcpsIndication.BufferSize = 5;
     uint8_t buffer[5] = {'H', 'E', 'L', 'L', 'O'};
@@ -52,7 +54,8 @@ void test_pushNmeaLoRaToGnss_success() {
     fakeit::Verify(OverloadedMethod(ArduinoFake(Serial), println, size_t(const String&))).Exactly(2);
 }
 
-void test_pushNmeaLoRaToGnss_emptyBuffer() {
+void test_pushNmeaLoRaToGnss_zeroLengthBuffer() {
+    TEST_MESSAGE("Testing pushNmeaLoRaToGnss with zero-length buffer...");
     McpsIndication_t mcpsIndication;
     mcpsIndication.BufferSize = 0;
     mcpsIndication.Buffer = nullptr;
@@ -61,7 +64,21 @@ void test_pushNmeaLoRaToGnss_emptyBuffer() {
     TEST_ASSERT_EQUAL(-1, result);
 
     fakeit::Verify(OverloadedMethod(ArduinoFake(Serial), write, size_t(const uint8_t*, size_t))).Exactly(0);
-    fakeit::Verify(OverloadedMethod(ArduinoFake(Serial), println, size_t(const char[]))).Exactly(0);
+    fakeit::Verify(OverloadedMethod(ArduinoFake(Serial), println, size_t(const char[]))).Exactly(1);
+    fakeit::Verify(OverloadedMethod(ArduinoFake(Serial), println, size_t(const String&))).Exactly(0);
+}
+
+void test_pushNmeaLoRaToGnss_nullBuffer() {
+    TEST_MESSAGE("Testing pushNmeaLoRaToGnss with non-zero-length buffer starting with a null pointer...");
+    McpsIndication_t mcpsIndication;
+    mcpsIndication.BufferSize = 5;
+    mcpsIndication.Buffer = nullptr;
+
+    int result = pushNmeaLoRaToGnss(&mcpsIndication);
+    TEST_ASSERT_EQUAL(-2, result);
+
+    fakeit::Verify(OverloadedMethod(ArduinoFake(Serial), write, size_t(const uint8_t*, size_t))).Exactly(0);
+    fakeit::Verify(OverloadedMethod(ArduinoFake(Serial), println, size_t(const char[]))).Exactly(1);
     fakeit::Verify(OverloadedMethod(ArduinoFake(Serial), println, size_t(const String&))).Exactly(0);
 }
 
@@ -78,7 +95,8 @@ int main() {
   UNITY_BEGIN();
   RUN_TEST(test_downLinkDataHandle);
   RUN_TEST(test_pushNmeaLoRaToGnss_success);
-  RUN_TEST(test_pushNmeaLoRaToGnss_emptyBuffer);
+  RUN_TEST(test_pushNmeaLoRaToGnss_zeroLengthBuffer);
+  RUN_TEST(test_pushNmeaLoRaToGnss_nullBuffer);
   return UNITY_END();
 }
 #endif
