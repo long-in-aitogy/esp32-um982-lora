@@ -47,9 +47,6 @@ extern bool loraWanAdr;
 extern bool keepNet;
 extern bool isTxConfirmed;
 
-extern uint8_t *ReceivedBuffer;
-extern uint8_t ReceivedBufferSize;
-
 // ================= KHAI BÁO HÀM =================
 extern void downLinkDataHandle(McpsIndication_t *mcpsIndication);
 int loraWanMain();

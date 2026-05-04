@@ -1,4 +1,4 @@
-#if NMEA_COMMUNICATION_PROTOCOL == TCP_IP
+#if NMEA_COMMUNICATION_PROTOCOL == TCP_IP || defined(UNIT_TEST)
 #define NTRIP_HANDLER_IP_CODE
 
 #include "functions/NTRIP_Handler_IP.h"
@@ -22,16 +22,17 @@ TinyGsmClient ntripClient(modem);
 
 // ================= ĐỊNH NGHĨA HÀM =================
 
-void setupNTRIP() {
+int setupNTRIP() {
   isIcyOk = false;
   isNmeaSent = false;
+  return 0;
 }
 
 bool isNtripConnected() {
   return isIcyOk; // Trả về true nếu đã xác thực thành công với Caster
 }
 
-void connectNTRIP() {
+int connectNTRIP() {
   Serial.print("\n[NTRIP] Dang mo TCP den: ");
   Serial.println(NTRIP_CASTER_IP);
 
@@ -70,10 +71,18 @@ void connectNTRIP() {
     }
   } else {
     Serial.println("[NTRIP] Loi ket noi TCP socket!");
+    return -1;
   }
+  return 0;
 }
 
-void loopNTRIP(String currentGGA) {
+int loopNTRIP(String currentGGA) {
+  int returnCode = NTRIP_MODE; // returnCode = NTRIP_MODE + ntripClient.available() * 4
+#ifdef UNIT_TEST
+  auto& ntripOutput = Serial;
+#else
+  auto& ntripOutput = Serial1;
+#endif
   // 1. Quản lý mất kết nối
   if (!ntripClient.connected()) {
     isIcyOk = false;
@@ -81,7 +90,7 @@ void loopNTRIP(String currentGGA) {
       connectNTRIP();
       lastReconnect = millis();
     }
-    return;
+    return 500; // Chưa kết nối, sẽ quay lại ở vòng tiếp theo của loop()
   }
 
   // 2. Xử lý sau khi kết nối thành công
@@ -108,11 +117,14 @@ void loopNTRIP(String currentGGA) {
       int bytesRead = ntripClient.read(buffer, sizeof(buffer));
       
       // Bơm trực tiếp byte thô vào cổng Serial1 cho module định vị
-      Serial1.write(buffer, bytesRead); 
+      ntripOutput.write(buffer, bytesRead); 
       
       // In dấu chấm nhỏ để biết đang nhận RTCM (bỏ comment nếu cần debug)
       // Serial.print("*"); 
+
+      returnCode += 4;
     }
   }
+  return returnCode;
 }
 #endif // NTRIP_HANDLER_IP_CODE

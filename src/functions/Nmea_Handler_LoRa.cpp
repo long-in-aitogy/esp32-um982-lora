@@ -2,20 +2,32 @@
 #define NTRIP_HANDLER_LORA_CODE
 
 #include "functions/Nmea_Handler_LoRa.h"
-#include "hardware/Lora_handler.h"
+#include <LoRaWan_APP.h>
 
-extern uint8_t *ReceivedBuffer;
-extern uint8_t ReceivedBufferSize;
+#ifdef NATIVE_BUILD
+#include <ArduinoFake.h>
+#endif
 
-int loopNmeaLoRa() {
-    if (ReceivedBufferSize > 0)
+int pushNmeaLoRaToGnss(McpsIndication_t *mcpsIndication) {
+    #ifdef NATIVE_BUILD
+    auto& nmeaOut = Serial;
+    #else
+    auto& nmeaOut = Serial1;
+    #endif
+    if (mcpsIndication->BufferSize > 0)
     {
-        Serial1.write(ReceivedBuffer, ReceivedBufferSize);
-        Serial1.println("[NMEA over LoRA] Da nhan duoc NMEA qua LoRA, da gui den mach RTK!");
-        Serial1.println("[NMEA over LoRA] Kich thuoc du lieu: " + String(ReceivedBufferSize) + " bytes");
-        Serial1.println("[NMEA over LoRA] Noi dung du lieu: " + String((char*)ReceivedBuffer));
+        if (mcpsIndication->Buffer == nullptr) {
+            nmeaOut.println("[NMEA over LoRA] Loi: Buffer rong!");
+            return -2;
+        }
+
+        nmeaOut.write(mcpsIndication->Buffer, mcpsIndication->BufferSize);
+        nmeaOut.println("[NMEA over LoRA] Da nhan duoc NMEA qua LoRA, da gui den mach RTK!");
+        nmeaOut.println("[NMEA over LoRA] Kich thuoc du lieu: " + String(mcpsIndication->BufferSize) + " bytes");
+        nmeaOut.println("[NMEA over LoRA] Noi dung du lieu: " + String((char*)mcpsIndication->Buffer));
         return 0;
     }
+    nmeaOut.println("[NMEA over LoRA] Loi: Buffer co do dai bang 0!");
     return -1;
 }
 

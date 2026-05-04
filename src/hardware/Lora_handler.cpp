@@ -1,4 +1,5 @@
 #include "hardware/Lora_handler.h"
+#include "functions/Nmea_Handler_LoRa.h"
 
 DeviceClass_t loraWanClass = LORAWAN_CLASS;
 LoRaMacRegion_t loraWanRegion = ACTIVE_REGION;
@@ -23,27 +24,55 @@ bool isTxConfirmed = TX_CONFIRMED;
 
 uint32_t appTxDutyCycle = 1000; // 1000ms = 1s
 
-uint8_t *ReceivedBuffer;
-uint8_t ReceivedBufferSize;
-
 void downLinkDataHandle(McpsIndication_t *mcpsIndication)
 {
-    Serial.printf("+REV DATA:%s,RXSIZE %d,PORT %d\r\n", mcpsIndication->RxSlot ? "RXWIN2" : "RXWIN1", mcpsIndication->BufferSize, mcpsIndication->Port);
-    Serial.print("+REV DATA:");
-    free(ReceivedBuffer);
-    ReceivedBuffer = nullptr;
-    ReceivedBufferSize = mcpsIndication->BufferSize;
-    ReceivedBuffer = new uint8_t[ReceivedBufferSize];
-    for (uint8_t i = 0; i < mcpsIndication->BufferSize; i++)
+    String slot;
+    switch (mcpsIndication->RxSlot)
     {
-        ReceivedBuffer[i] = mcpsIndication->Buffer[i];
-        Serial.printf("%02X", mcpsIndication->Buffer[i]);
+        case RX_SLOT_WIN_1:
+            slot = "RXWIN1";
+            break;
+        case RX_SLOT_WIN_2:
+            slot = "RXWIN2";
+            break;
+        case RX_SLOT_WIN_CLASS_C:
+            slot = "CLASS_C";
+            break;
+        case RX_SLOT_WIN_PING_SLOT:
+            slot = "PING_SLOT";
+            break;
+        case RX_SLOT_WIN_MULTICAST_SLOT:
+            slot = "MULTICAST_SLOT";
+            break;
+        default:
+            slot = "UNKNOWN";
     }
+    Serial.println("+REV DATA:" + slot + 
+        ",RXSIZE " + String(mcpsIndication->BufferSize) + ",PORT " + 
+        String(mcpsIndication->Port)
+    );
+    String bufferHex = "";
+    if (mcpsIndication->Buffer != nullptr && mcpsIndication->BufferSize > 0)
+    {
+        for (uint8_t i = 0; i < mcpsIndication->BufferSize; i++)
+        {
+            if (mcpsIndication->Buffer[i] < 0x10)
+            {
+                bufferHex += "0";
+            }
+            bufferHex += String(mcpsIndication->Buffer[i], HEX);
+        }
+        bufferHex.toUpperCase();
+    }
+    Serial.println("Buffer: " + bufferHex);
     Serial.println();
-    uint32_t color = mcpsIndication->Buffer[0] << 16 | mcpsIndication->Buffer[1] << 8 | mcpsIndication->Buffer[2];
     #if (LoraWan_RGB == 1)
+        uint32_t color = mcpsIndication->Buffer[0] << 16 | mcpsIndication->Buffer[1] << 8 | mcpsIndication->Buffer[2];
         turnOnRGB(color, 5000);
         turnOffRGB();
+    #endif
+    #ifndef UNIT_TEST
+    pushNmeaLoRaToGnss(mcpsIndication);
     #endif
 }
 

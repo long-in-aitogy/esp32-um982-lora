@@ -30,7 +30,7 @@ extern String latestGGA;
 extern String targetGGA;
 
 // ================= ĐỊNH NGHĨA CÁC HÀM =================
-void sendDeviceHealth();
+int sendDeviceHealth();
 int gnssRoverParseAndMqtt();
 
 #endif

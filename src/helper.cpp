@@ -57,7 +57,7 @@ int gnssRoverParseAndMqtt()
     }
 }
 
-void sendDeviceHealth()
+int sendDeviceHealth()
 {
     // 1. Lấy các thông số hệ thống
     unsigned long uptime_s = millis() / 1000;

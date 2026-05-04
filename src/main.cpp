@@ -57,7 +57,6 @@ void loop()
     loopNTRIP(latestGGA);
     #else
     loraWanMain();
-    loopNmeaLoRa();
     #endif
 
     // === KIỂM TRA VÀ GỬI THÔNG TIN SỨC KHỎE ===

@@ -8,8 +8,9 @@
 
 // =============== KHAI BÁO HÀM =================
 
-void setupNTRIP();
-void loopNTRIP(String currentGGA);
+int setupNTRIP();
+int loopNTRIP(String currentGGA);
+int connectNTRIP();
 bool isNtripConnected(); // Thêm hàm lấy trạng thái NTRIP
 
 #endif
