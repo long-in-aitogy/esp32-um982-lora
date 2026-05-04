@@ -2,6 +2,7 @@
 
 extern String latestGGA;
 static bool nmeaBufferLocked = false;
+bool mqttHealthMode = false;
 
 gga_data_struct ggaData;
 gga_data_struct targetGgaData;
@@ -90,6 +91,7 @@ int publishGGA(String& nmeaBuffer)
 
 int sendDeviceHealth()
 {
+    mqttHealthMode = true; // Chuyển sang chế độ gửi health, ưu tiên hơn các dữ liệu khác
     // 1. Lấy các thông số hệ thống
     unsigned long uptime_s = millis() / 1000;
     uint32_t freeHeap = ESP.getFreeHeap();
@@ -123,4 +125,6 @@ int sendDeviceHealth()
            
   // 3. Gửi lên Topic theo dõi
   publishHealth(String(healthPayload));
+  mqttHealthMode = false; // Chuyển về chế độ bình thường
+  return 0;
 }

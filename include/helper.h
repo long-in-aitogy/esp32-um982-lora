@@ -29,6 +29,7 @@ extern TinyGsm modem;
 // ================= ĐỊNH NGHĨA CÁC BIẾN TOÀN CỤC =================
 extern String latestGGA;
 extern String targetGGA;
+extern bool mqttHealthMode;
 
 // ================= ĐỊNH NGHĨA CÁC HÀM =================
 int sendDeviceHealth();
