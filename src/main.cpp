@@ -8,6 +8,14 @@ String latestGGA = "";
 // Toạ độ của mục tiêu, tạm thời để giá trị mẫu
 String targetGGA = "$GNGGA,045151.00,2104.44183385,N,10546.62503715,E,1,28,0.7,22.4381,M,-28.2448,M,,*6C";
 
+/* ===================== NGUYÊN MẪU HÀM ======================== */
+
+void taskNmea(void* parameter);
+void gnssParseTask(void* parameter);
+void gnssPublishTask(void* parameter);
+
+/* ==================SETUP VÀ LOOP======================== */
+
 void setup()
 {
     Serial.begin(115200);
@@ -45,32 +53,47 @@ void setup()
         goto connection_init;
     }
 
+    Serial.println("[SETUP] Khoi dong cac task...");
+    
+    xTaskCreatePinnedToCore(taskNmea, "NMEA Task", 4096, NULL, 1, NULL, 0);
+    xTaskCreatePinnedToCore(gnssParseTask, "GNSS Parse Task", 4096, NULL, 1, NULL, 0);
+    xTaskCreatePinnedToCore(gnssPublishTask, "GNSS Publish Task", 4096, NULL, 1, NULL, 0);
+
     Serial.println("=========================================");
     Serial.println("        KHOI DONG HOAN TAT               ");
     Serial.println("=========================================\n");
 }
 
-void loop()
-{
-    // 1. Duy trì kết nối mạng
-    loopMQTT();
-    #if NMEA_COMMUNICATION_PROTOCOL == TCP_IP
-    loopNTRIP(latestGGA);
-    #else
-    loraWanMain();
-    #endif
+/* ================= TRIỂN KHAI HÀM TASK ====================== */
 
-    // === KIỂM TRA VÀ GỬI THÔNG TIN SỨC KHỎE ===
-    if (millis() - lastHealthCheck >= HEALTH_INTERVAL)
-    {
-        sendDeviceHealth();
-        lastHealthCheck = millis();
+void taskNmea(void* parameter) {
+    while (true) {
+        #if NMEA_COMMUNICATION_PROTOCOL == TCP_IP
+        loopNTRIP(latestGGA);
+        #else
+        loraWanMain();
+        #endif
     }
+}
 
-    // 2. Xử lý luồng dữ liệu từ UM980
-    while (Serial1.available())
-    {
-        gnssRoverParse(nmeaBuffer);
+void gnssParseTask(void* parameter) {
+    while (true) {
+        if (Serial1.available()) {
+            gnssRoverParse(nmeaBuffer);
+        }
+    }
+}
+
+void gnssPublishTask(void* parameter) {
+    while (true) {
+        loopMQTT();
         publishGGA(nmeaBuffer);
     }
+}
+
+void loop()
+{
+    loopMQTT();
+    sendDeviceHealth();
+    delay(HEALTH_INTERVAL);
 }

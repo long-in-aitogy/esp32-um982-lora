@@ -10,18 +10,26 @@ ksxt_data_struct ksxtData;
 int gnssRoverParse(String& nmeaBuffer)
 {
     if (nmeaBufferLocked)
-        return 2;
+    {
+        delay(500);
+        if (nmeaBufferLocked)
+            return 2;
+    }
 
     parse_start:
     char c = Serial1.read();
     nmeaBuffer += c;
     if (c == '\n')
+    {
+        nmeaBufferLocked = true;
         return 1;
+    }
     return 0;
 }
 
 int publishGGA(String& nmeaBuffer)
 {
+    begin_publish:
     if (nmeaBufferLocked)
     {
         nmeaBuffer.trim();
@@ -73,7 +81,10 @@ int publishGGA(String& nmeaBuffer)
     }
     else
     {
-        return 2;
+        delay(500);
+        if (!nmeaBufferLocked)
+            return 2;
+        goto begin_publish;
     }
 }
 
