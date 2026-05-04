@@ -31,6 +31,6 @@ extern String targetGGA;
 
 // ================= ĐỊNH NGHĨA CÁC HÀM =================
 int sendDeviceHealth();
-int gnssRoverParseAndMqtt();
+int gnssRoverParseAndMqtt(String& nmeaBuffer);
 
 #endif

@@ -1,6 +1,7 @@
 #include "helper.h"
 
 // ================= ĐỊNH NGHĨA CÁC BIẾN TOÀN CỤC =================
+String nmeaBuffer = "";
 unsigned long lastHealthCheck = 0;
 String latestGGA = "";
 
@@ -69,6 +70,6 @@ void loop()
     // 2. Xử lý luồng dữ liệu từ UM980
     while (Serial1.available())
     {
-        gnssRoverParseAndMqtt();
+        gnssRoverParseAndMqtt(nmeaBuffer);
     }
 }
