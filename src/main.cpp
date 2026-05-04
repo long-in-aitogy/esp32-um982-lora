@@ -73,6 +73,7 @@ void taskNmea(void* parameter) {
         #else
         loraWanMain();
         #endif
+        vTaskDelay(pdMS_TO_TICKS(10));
     }
 }
 
@@ -81,13 +82,14 @@ void gnssParseTask(void* parameter) {
         if (Serial1.available()) {
             gnssRoverParse(nmeaBuffer);
         }
+        vTaskDelay(pdMS_TO_TICKS(10));
     }
 }
 
 void gnssPublishTask(void* parameter) {
     while (true) {
         if (mqttHealthMode) {
-             delay(500); // Đợi 0.5 giây trước khi gửi health, tránh gửi quá nhanh
+             vTaskDelay(pdMS_TO_TICKS(500)); // Đợi 0.5 giây trước khi gửi health, tránh gửi quá nhanh
              continue; // Bỏ qua việc gửi dữ liệu khác khi đang ở chế độ health
         }
         loopMQTT();
@@ -99,5 +101,5 @@ void loop()
 {
     loopMQTT();
     sendDeviceHealth();
-    delay(HEALTH_INTERVAL);
+    vTaskDelay(pdMS_TO_TICKS(HEALTH_INTERVAL));
 }
