@@ -1,18 +1,28 @@
 #include "helper.h"
 
 extern String latestGGA;
+static bool nmeaBufferLocked = false;
 
 gga_data_struct ggaData;
 gga_data_struct targetGgaData;
 ksxt_data_struct ksxtData;
 
-int gnssRoverParseAndMqtt(String& nmeaBuffer)
+int gnssRoverParse(String& nmeaBuffer)
 {
+    if (nmeaBufferLocked)
+        return 2;
+
     parse_start:
     char c = Serial1.read();
     nmeaBuffer += c;
-
     if (c == '\n')
+        return 1;
+    return 0;
+}
+
+int publishGGA(String& nmeaBuffer)
+{
+    if (nmeaBufferLocked)
     {
         nmeaBuffer.trim();
 
@@ -44,6 +54,8 @@ int gnssRoverParseAndMqtt(String& nmeaBuffer)
             }
             publishRaw(nmeaBuffer, false);
             publishData(jsonPayload, false);
+            nmeaBuffer = "";
+            nmeaBufferLocked = false;
             return 0;
         }
         // Bắt dòng phản hồi lệnh
@@ -51,57 +63,18 @@ int gnssRoverParseAndMqtt(String& nmeaBuffer)
         {
             Serial.print("[UM980 RESPONSE] ");
             Serial.println(nmeaBuffer);
+            nmeaBuffer = "";
+            nmeaBufferLocked = false;
             return -1;
         }
+        nmeaBuffer = "";
+        nmeaBufferLocked = false;
         return -1;
     }
-}
-
-int parseAndPublishGGA(String& nmeaBuffer)
-{
-    nmeaBuffer.trim();
-
-    // Bắt dòng tọa độ
-    if (nmeaBuffer.startsWith("$GNGGA") || nmeaBuffer.startsWith("$GPGGA") || nmeaBuffer.startsWith("$KSXT"))
+    else
     {
-        // Cập nhật tọa độ mới nhất để NTRIP dùng xác thực (Mode 3)
-        latestGGA = nmeaBuffer;
-
-        // Đẩy lên MQTT
-        String jsonPayload = "";
-        if (nmeaBuffer.startsWith("$KSXT"))
-        {
-            bool parseOk = parseKSXT_toStruct(nmeaBuffer, ksxtData);
-            if (parseOk)
-            {
-                jsonPayload = parseKSXT_toJSON(ksxtData);
-            }
-            publishData(jsonPayload, false);
-        }
-        else
-        {
-            publishRaw(nmeaBuffer, true);
-            bool parseOk = parseGGA_toStruct(nmeaBuffer, ggaData);
-            if (parseOk)
-            {
-                jsonPayload = parseGGA_toJSON(ggaData);
-            }
-        }
-        publishRaw(nmeaBuffer, false);
-        publishData(jsonPayload, false);
-        nmeaBuffer = "";
-        return 0;
+        return 2;
     }
-    // Bắt dòng phản hồi lệnh
-    else if (nmeaBuffer.startsWith("#"))
-    {
-        Serial.print("[UM980 RESPONSE] ");
-        Serial.println(nmeaBuffer);
-        nmeaBuffer = "";
-        return -1;
-    }
-    nmeaBuffer = "";
-    return -1;
 }
 
 int sendDeviceHealth()

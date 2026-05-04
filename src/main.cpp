@@ -70,6 +70,7 @@ void loop()
     // 2. Xử lý luồng dữ liệu từ UM980
     while (Serial1.available())
     {
-        gnssRoverParseAndMqtt(nmeaBuffer);
+        gnssRoverParse(nmeaBuffer);
+        publishGGA(nmeaBuffer);
     }
 }
