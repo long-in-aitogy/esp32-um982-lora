@@ -9,6 +9,7 @@
 #endif
 
 int pushNmeaLoRaToGnss(McpsIndication_t *mcpsIndication) {
+    // Không sử dụng tài nguyên chung, không cần mutex
     #ifdef NATIVE_BUILD
     auto& nmeaOut = Serial;
     #else

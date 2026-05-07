@@ -9,6 +9,9 @@ inline constexpr int RX_GNSS = 6; // Nối TXD (Hàng dưới) của UM980
 inline constexpr int TX_GNSS = 7; // Nối RXD (Hàng dưới) của UM980
 inline constexpr int GNSS_BAUD = 115200;
 
+// ================= CẤU HÌNH CÁC TASK =================
+inline constexpr int MUTEX_TIMEOUT_MS = 3000; // Thời gian tối đa để chờ mutex (ms)
+
 // ================= CẤU HÌNH KẾT NỐI =================
 #if CONNECT_USING_WIFI
 inline constexpr char WIFI_SSID[] = "AITOGY";

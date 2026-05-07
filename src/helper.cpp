@@ -6,7 +6,7 @@ gga_data_struct ggaData;
 gga_data_struct targetGgaData;
 ksxt_data_struct ksxtData;
 
-int gnssRoverParse(String& nmeaBuffer)
+int roverReadCharFromRtk(String& nmeaBuffer)
 {
 
     parse_start:
