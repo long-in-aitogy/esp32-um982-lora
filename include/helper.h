@@ -32,7 +32,7 @@ extern String targetGGA;
 extern bool mqttHealthMode;
 
 // ================= ĐỊNH NGHĨA CÁC HÀM =================
-int sendDeviceHealth();
+String formDeviceHealthString();
 int roverReadCharFromRtk(String& nmeaBuffer);
 int publishGGA(String& nmeaBuffer);
 

@@ -16,6 +16,9 @@ int roverReadCharFromRtk(String& nmeaBuffer)
     {
         return 1;
     }
+    if (c == NULL) {
+        return 2;
+    }
     return 0;
 }
 
@@ -40,7 +43,7 @@ int publishGGA(String& nmeaBuffer)
                 }
                 publishData(jsonPayload, false);
             }
-            else
+            else if (nmeaBuffer.startsWith("$GNGGA"))
             {
                 publishRaw(nmeaBuffer, true);
                 bool parseOk = parseGGA_toStruct(nmeaBuffer, ggaData);
@@ -48,9 +51,8 @@ int publishGGA(String& nmeaBuffer)
                 {
                     jsonPayload = parseGGA_toJSON(ggaData);
                 }
+                publishData(jsonPayload, true);
             }
-            publishRaw(nmeaBuffer, false);
-            publishData(jsonPayload, false);
             nmeaBuffer = "";
             return 0;
         }
@@ -67,7 +69,7 @@ int publishGGA(String& nmeaBuffer)
 
 }
 
-int sendDeviceHealth()
+String formDeviceHealthString()
 {
     // 1. Lấy các thông số hệ thống
     unsigned long uptime_s = millis() / 1000;
@@ -100,7 +102,6 @@ int sendDeviceHealth()
            ntripOk ? "true" : "false",
            gnssOk ? "true" : "false");
            
-  // 3. Gửi lên Topic theo dõi
-  publishHealth(String(healthPayload));
-  return 0;
+  // 3. Trả về payload để có thể log hoặc dùng cho mục đích khác nếu cần
+  return String(healthPayload);
 }

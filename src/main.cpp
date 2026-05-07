@@ -1,6 +1,8 @@
 #include "helper.h"
 
 // ================= ĐỊNH NGHĨA CÁC BIẾN TOÀN CỤC =================
+extern PubSubClient mqtt;
+
 String nmeaBuffer = "";
 unsigned long lastHealthCheck = 0;
 String latestGGA = "";
@@ -74,20 +76,20 @@ void setup()
     }
 
     Serial.println("[SETUP] Task NMEA: Doc du lieu NMEA tu UM980");
-    xTaskCreatePinnedToCore(taskNmea, "NMEA Task", 4096, NULL, 1, NULL, 0);
+    xTaskCreatePinnedToCore(taskNmea, "NMEA Task", 4096, NULL, 1, NULL, 1);
     Serial.println("[SETUP] Da khoi dong Task NMEA!");
 
     Serial.println("[SETUP] Task GNSS Parse: Phan tich du lieu NMEA va chuan bi payload");
-    xTaskCreatePinnedToCore(gnssParseTask, "GNSS Parse Task", 4096, NULL, 3, NULL, 0);
+    xTaskCreatePinnedToCore(gnssParseTask, "GNSS Parse Task", 4096, NULL, 3, NULL, 1);
     Serial.println("[SETUP] Da khoi dong Task GNSS Parse!");
 
     Serial.println("[SETUP] Task GNSS Publish: Gui du lieu da duoc phan tich len MQTT");
     xTaskCreatePinnedToCore(gnssPublishTask, "GNSS Publish Task", 4096, NULL, 2, NULL, 0);
     Serial.println("[SETUP] Da khoi dong Task GNSS Publish!");
 
-    Serial.println("[SETUP] Task Health Check: Gui thong tin suc khoe thiet bi len MQTT moi 30s");
-    xTaskCreatePinnedToCore(healthCheckTask, "Health Check Task", 4096, NULL, 4, NULL, 0);
-    Serial.println("[SETUP] Da khoi dong Task Health Check!");
+    Serial.println("[SETUP] Task Health: Gui thong tin suc khoe thiet bi len MQTT moi 30s");
+    xTaskCreatePinnedToCore(healthCheckTask, "Health Task", 4096, NULL, 3, NULL, 0);
+    Serial.println("[SETUP] Da khoi dong Task Health!");
 
     Serial.println("=========================================");
     Serial.println("        KHOI DONG HOAN TAT               ");
@@ -104,7 +106,7 @@ void taskNmea(void* parameter) {
         #else
         loraWanMain();
         #endif
-        vTaskDelay(pdMS_TO_TICKS(10));
+        vTaskDelay(pdMS_TO_TICKS(10000));
     }
 }
 
@@ -112,41 +114,101 @@ void gnssParseTask(void* parameter) {
     // sử dụng nmeaBuffer làm tài nguyên chung với publishTask, cần mutex để tránh xung đột
     
     while (true) {
+        int readError = -2;
         if (xSemaphoreTake(nmeaBufferMutex, pdMS_TO_TICKS(MUTEX_TIMEOUT_MS))) {
             if (Serial1.available()) {
-                roverReadCharFromRtk(nmeaBuffer);
+                readError = roverReadCharFromRtk(nmeaBuffer);
             }
             xSemaphoreGive(nmeaBufferMutex);
         }
+        if (readError == 0) {
+            vTaskDelay(pdMS_TO_TICKS(20));
+            #if PROGRAM_DEBUG
+            Serial.println("[GNSS PARSE] Dang doc tiep cac char con lai tu Serial1...");
+            #endif
+            continue;
+        }
+        #if PROGRAM_DEBUG
+        Serial.println("[GNSS PARSE] Da het dong hoac co loi, ma loi: " + String(readError));
+        #endif
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
-    vTaskDelay(pdMS_TO_TICKS(10));
 }
 
 void gnssPublishTask(void* parameter) {
+    String localBuf = "";
+    String topic = "";
     // sử dụng nmeaBuffer làm tài nguyên chung với gnssParseTask
     // sử dụng chung đối tượng lớp PubSubClient là mqtt với healthCheckTask
     while (true) {
-        if (xSemaphoreTake(nmeaBufferMutex, pdMS_TO_TICKS(MUTEX_TIMEOUT_MS))
-            && xSemaphoreTake(mqttClientMutex, pdMS_TO_TICKS(MUTEX_TIMEOUT_MS)))
-        {
-            loopMQTT();
-            publishGGA(nmeaBuffer);
-            xSemaphoreGive(mqttClientMutex);
+        if (xSemaphoreTake(nmeaBufferMutex, pdMS_TO_TICKS(MUTEX_TIMEOUT_MS))) {
+            localBuf = nmeaBuffer;    // copy
+            nmeaBuffer = "";         // clear shared buffer
             xSemaphoreGive(nmeaBufferMutex);
         }
+        if (localBuf.length() > 0) {
+            if (xSemaphoreTake(mqttClientMutex, pdMS_TO_TICKS(MUTEX_TIMEOUT_MS))) {
+                #if PROGRAM_DEBUG
+                Serial.println("[GNSS PUBLISH] Kiem tra ket noi MQTT de gui du lieu NMEA...");
+                #endif
+                if (mqtt.connected()) {
+                    #if PROGRAM_DEBUG
+                    Serial.println("[GNSS PUBLISH] MQTT dang ket noi, dang kich hoat loop...");
+                    #endif
+                    mqtt.loop();
+                    #if PROGRAM_DEBUG
+                    Serial.println("[GNSS PUBLISH] Dang gui du lieu NMEA len MQTT...");
+                    #endif
+                    publishGGA(localBuf); // publishGGA accepts String&
+                }
+                xSemaphoreGive(mqttClientMutex);
+            }
+            localBuf = "";
+            vTaskDelay(pdMS_TO_TICKS(100));
+            continue;
+        }
+        #if PROGRAM_DEBUG
+        Serial.println("[GNSS PUBLISH] Khong co du lieu NMEA de gui, cho 2000ms...");
+        #endif
+        noParse:
+        vTaskDelay(pdMS_TO_TICKS(2000)); // nothing to publish, yield longer
     }
 }
 
 void healthCheckTask(void* parameter) {
+    String healthPayload = "";
     while (true) {
-        if (xSemaphoreTake(mqttClientMutex, pdMS_TO_TICKS(MUTEX_TIMEOUT_MS)))
-        {
-            loopMQTT();
-            sendDeviceHealth();
-            xSemaphoreGive(mqttClientMutex);
+        healthPayload = formDeviceHealthString();
+        Serial.print("[HEALTH CHECK] ");
+        Serial.println(healthPayload);
+
+        if (healthPayload.length() > 0) {
+            if (xSemaphoreTake(mqttClientMutex, pdMS_TO_TICKS(MUTEX_TIMEOUT_MS)))
+            {
+                #if PROGRAM_DEBUG
+                Serial.println("[HEALTH CHECK] Kiem tra ket noi MQTT de gui thong tin suc khoe...");
+                #endif
+                if (mqtt.connected()) {
+                    #if PROGRAM_DEBUG
+                    Serial.println("[HEALTH CHECK] MQTT dang ket noi, dang kich hoat loop...");
+                    #endif
+                    mqtt.loop();
+                    #if PROGRAM_DEBUG
+                    Serial.println("[HEALTH CHECK] Dang gui thong tin suc khoe len MQTT...");
+                    #endif
+                    publishHealth(healthPayload);
+                }
+                xSemaphoreGive(mqttClientMutex);
+            }
         }
         vTaskDelay(pdMS_TO_TICKS(HEALTH_INTERVAL));
     }
 }
 
-void loop() {}
+void loop() {
+    if (!mqtt.connected()) {
+        Serial.println("[LOOP] MQTT mat ket noi, dang thu ket noi lai...");
+        connectMQTT();
+    }
+    vTaskDelay(pdMS_TO_TICKS(1000)); // loop trống, tất cả logic đã được xử lý trong các task
+}
