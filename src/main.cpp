@@ -88,10 +88,6 @@ void gnssParseTask(void* parameter) {
 
 void gnssPublishTask(void* parameter) {
     while (true) {
-        if (mqttHealthMode) {
-             vTaskDelay(pdMS_TO_TICKS(500)); // Đợi 0.5 giây trước khi gửi health, tránh gửi quá nhanh
-             continue; // Bỏ qua việc gửi dữ liệu khác khi đang ở chế độ health
-        }
         loopMQTT();
         publishGGA(nmeaBuffer);
     }

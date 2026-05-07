@@ -1,8 +1,6 @@
 #include "helper.h"
 
 extern String latestGGA;
-static bool nmeaBufferLocked = false;
-bool mqttHealthMode = false;
 
 gga_data_struct ggaData;
 gga_data_struct targetGgaData;
@@ -10,19 +8,12 @@ ksxt_data_struct ksxtData;
 
 int gnssRoverParse(String& nmeaBuffer)
 {
-    if (nmeaBufferLocked)
-    {
-        delay(500);
-        if (nmeaBufferLocked)
-            return 2;
-    }
 
     parse_start:
     char c = Serial1.read();
     nmeaBuffer += c;
     if (c == '\n')
     {
-        nmeaBufferLocked = true;
         return 1;
     }
     return 0;
@@ -30,9 +21,6 @@ int gnssRoverParse(String& nmeaBuffer)
 
 int publishGGA(String& nmeaBuffer)
 {
-    begin_publish:
-    if (nmeaBufferLocked)
-    {
         nmeaBuffer.trim();
 
         // Bắt dòng tọa độ
@@ -64,7 +52,6 @@ int publishGGA(String& nmeaBuffer)
             publishRaw(nmeaBuffer, false);
             publishData(jsonPayload, false);
             nmeaBuffer = "";
-            nmeaBufferLocked = false;
             return 0;
         }
         // Bắt dòng phản hồi lệnh
@@ -73,25 +60,15 @@ int publishGGA(String& nmeaBuffer)
             Serial.print("[UM980 RESPONSE] ");
             Serial.println(nmeaBuffer);
             nmeaBuffer = "";
-            nmeaBufferLocked = false;
             return -1;
         }
         nmeaBuffer = "";
-        nmeaBufferLocked = false;
         return -1;
-    }
-    else
-    {
-        delay(500);
-        if (!nmeaBufferLocked)
-            return 2;
-        goto begin_publish;
-    }
+
 }
 
 int sendDeviceHealth()
 {
-    mqttHealthMode = true; // Chuyển sang chế độ gửi health, ưu tiên hơn các dữ liệu khác
     // 1. Lấy các thông số hệ thống
     unsigned long uptime_s = millis() / 1000;
     uint32_t freeHeap = ESP.getFreeHeap();
@@ -125,6 +102,5 @@ int sendDeviceHealth()
            
   // 3. Gửi lên Topic theo dõi
   publishHealth(String(healthPayload));
-  mqttHealthMode = false; // Chuyển về chế độ bình thường
   return 0;
 }
