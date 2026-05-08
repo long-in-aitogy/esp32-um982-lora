@@ -33,7 +33,7 @@ extern bool mqttHealthMode;
 
 // ================= ĐỊNH NGHĨA CÁC HÀM =================
 String formDeviceHealthString();
-int roverReadCharFromRtk(String& nmeaBuffer);
+// int roverReadCharFromRtk(String& nmeaBuffer);
 int publishGGA(String& nmeaBuffer);
 
 #endif

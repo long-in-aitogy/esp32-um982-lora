@@ -76,11 +76,11 @@ void setup()
     }
 
     Serial.println("[SETUP] Task NMEA: Doc du lieu NMEA tu UM980");
-    xTaskCreatePinnedToCore(taskNmea, "NMEA Task", 4096, NULL, 1, NULL, 1);
+    xTaskCreatePinnedToCore(taskNmea, "NMEA Task", 4096, NULL, 2, NULL, 1);
     Serial.println("[SETUP] Da khoi dong Task NMEA!");
 
     Serial.println("[SETUP] Task GNSS Parse: Phan tich du lieu NMEA va chuan bi payload");
-    xTaskCreatePinnedToCore(gnssParseTask, "GNSS Parse Task", 4096, NULL, 3, NULL, 1);
+    xTaskCreatePinnedToCore(gnssParseTask, "GNSS Parse Task", 4096, NULL, 3, NULL, 0);
     Serial.println("[SETUP] Da khoi dong Task GNSS Parse!");
 
     Serial.println("[SETUP] Task GNSS Publish: Gui du lieu da duoc phan tich len MQTT");
@@ -88,7 +88,7 @@ void setup()
     Serial.println("[SETUP] Da khoi dong Task GNSS Publish!");
 
     Serial.println("[SETUP] Task Health: Gui thong tin suc khoe thiet bi len MQTT moi 30s");
-    xTaskCreatePinnedToCore(healthCheckTask, "Health Task", 4096, NULL, 3, NULL, 0);
+    xTaskCreatePinnedToCore(healthCheckTask, "Health Task", 4096, NULL, 1, NULL, 1);
     Serial.println("[SETUP] Da khoi dong Task Health!");
 
     Serial.println("=========================================");
@@ -112,26 +112,23 @@ void taskNmea(void* parameter) {
 
 void gnssParseTask(void* parameter) {
     // sử dụng nmeaBuffer làm tài nguyên chung với publishTask, cần mutex để tránh xung đột
-    
     while (true) {
         int readError = -2;
         if (xSemaphoreTake(nmeaBufferMutex, pdMS_TO_TICKS(MUTEX_TIMEOUT_MS))) {
-            if (Serial1.available()) {
-                readError = roverReadCharFromRtk(nmeaBuffer);
+            while (Serial1.available()) {
+                char c = Serial1.read();
+                nmeaBuffer += c;
+                if (c == '\n' || c == '\0') {
+                    break; // đọc đến cuối dòng, sẵn sàng cho việc phân tích
+                }
             }
             xSemaphoreGive(nmeaBufferMutex);
+            if (nmeaBuffer.length() > 0) {
+                Serial.print("[GNSS PARSE] Doc duoc du lieu NMEA: ");
+                Serial.println(nmeaBuffer);
+            }
         }
-        if (readError == 0) {
-            vTaskDelay(pdMS_TO_TICKS(20));
-            #if PROGRAM_DEBUG
-            Serial.println("[GNSS PARSE] Dang doc tiep cac char con lai tu Serial1...");
-            #endif
-            continue;
-        }
-        #if PROGRAM_DEBUG
-        Serial.println("[GNSS PARSE] Da het dong hoac co loi, ma loi: " + String(readError));
-        #endif
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        vTaskDelay(pdMS_TO_TICKS(100));
     }
 }
 
@@ -170,8 +167,7 @@ void gnssPublishTask(void* parameter) {
         #if PROGRAM_DEBUG
         Serial.println("[GNSS PUBLISH] Khong co du lieu NMEA de gui, cho 2000ms...");
         #endif
-        noParse:
-        vTaskDelay(pdMS_TO_TICKS(2000)); // nothing to publish, yield longer
+        vTaskDelay(pdMS_TO_TICKS(500)); // nothing to publish, yield longer
     }
 }
 

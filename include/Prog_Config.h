@@ -5,8 +5,8 @@
 #include "Top_Lvl_Config.h"
 
 // ================= CẤU HÌNH CHÂN CẮM VÀ TỐC ĐỘ SERIAL =================
-inline constexpr int RX_GNSS = 6; // Nối TXD (Hàng dưới) của UM980
-inline constexpr int TX_GNSS = 7; // Nối RXD (Hàng dưới) của UM980
+inline constexpr int RX_GNSS = 41; // Nối TXD (Hàng dưới) của UM980
+inline constexpr int TX_GNSS = 42; // Nối RXD (Hàng dưới) của UM980
 inline constexpr int GNSS_BAUD = 115200;
 
 // ================= CẤU HÌNH CÁC TASK =================
