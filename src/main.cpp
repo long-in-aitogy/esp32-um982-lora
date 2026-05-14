@@ -3,7 +3,7 @@
 // ================= ĐỊNH NGHĨA CÁC BIẾN TOÀN CỤC =================
 extern PubSubClient mqtt;
 
-String nmeaBuffer = "";
+String rtcmBuffer = "";
 unsigned long lastHealthCheck = 0;
 String latestGGA = "";
 
@@ -16,7 +16,7 @@ SemaphoreHandle_t nmeaBufferMutex = NULL;
 
 /* ===================== NGUYÊN MẪU HÀM ======================== */
 
-void taskNmea(void* parameter);
+void taskRtcm(void* parameter);
 void gnssParseTask(void* parameter);
 void gnssPublishTask(void* parameter);
 void healthCheckTask(void* parameter);
@@ -76,7 +76,7 @@ void setup()
     }
 
     Serial.println("[SETUP] Task NMEA: Doc du lieu NMEA tu UM980");
-    xTaskCreatePinnedToCore(taskNmea, "NMEA Task", 4096, NULL, 2, NULL, 1);
+    xTaskCreatePinnedToCore(taskRtcm, "NMEA Task", 4096, NULL, 2, NULL, 1);
     Serial.println("[SETUP] Da khoi dong Task NMEA!");
 
     Serial.println("[SETUP] Task GNSS Parse: Phan tich du lieu NMEA va chuan bi payload");
@@ -98,15 +98,16 @@ void setup()
 
 /* ================= TRIỂN KHAI HÀM TASK ====================== */
 
-void taskNmea(void* parameter) {
+void taskRtcm(void* parameter) {
     // không sử dụng tài nguyên chung, không cần mutex
     while (true) {
         #if NMEA_COMMUNICATION_PROTOCOL == TCP_IP
         loopNTRIP(latestGGA);
+        vTaskDelay(pdMS_TO_TICKS(1000));
         #else
-        loraWanMain();
+        loraReceive();
+        vTaskDelay(pdMS_TO_TICKS(300));
         #endif
-        vTaskDelay(pdMS_TO_TICKS(10000));
     }
 }
 
@@ -117,15 +118,15 @@ void gnssParseTask(void* parameter) {
         if (xSemaphoreTake(nmeaBufferMutex, pdMS_TO_TICKS(MUTEX_TIMEOUT_MS))) {
             while (Serial1.available()) {
                 char c = Serial1.read();
-                nmeaBuffer += c;
+                rtcmBuffer += c;
                 if (c == '\n' || c == '\0') {
                     break; // đọc đến cuối dòng, sẵn sàng cho việc phân tích
                 }
             }
             xSemaphoreGive(nmeaBufferMutex);
-            if (nmeaBuffer.length() > 0) {
+            if (rtcmBuffer.length() > 0) {
                 Serial.print("[GNSS PARSE] Doc duoc du lieu NMEA: ");
-                Serial.println(nmeaBuffer);
+                Serial.println(rtcmBuffer);
             }
         }
         vTaskDelay(pdMS_TO_TICKS(100));
@@ -139,8 +140,8 @@ void gnssPublishTask(void* parameter) {
     // sử dụng chung đối tượng lớp PubSubClient là mqtt với healthCheckTask
     while (true) {
         if (xSemaphoreTake(nmeaBufferMutex, pdMS_TO_TICKS(MUTEX_TIMEOUT_MS))) {
-            localBuf = nmeaBuffer;    // copy
-            nmeaBuffer = "";         // clear shared buffer
+            localBuf = rtcmBuffer;    // copy
+            rtcmBuffer = "";         // clear shared buffer
             xSemaphoreGive(nmeaBufferMutex);
         }
         if (localBuf.length() > 0) {

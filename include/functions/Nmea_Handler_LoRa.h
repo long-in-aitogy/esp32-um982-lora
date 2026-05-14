@@ -5,6 +5,6 @@
 #include "Prog_Config.h"
 #include <LoRaWan_APP.h>
 
-int pushNmeaLoRaToGnss(McpsIndication_t *mcpsIndication);
+int pushNmeaLoRaToGnss(char* nmeaData, size_t dataSizes);
 
 #endif

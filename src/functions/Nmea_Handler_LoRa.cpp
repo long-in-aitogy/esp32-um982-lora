@@ -8,24 +8,24 @@
 #include <ArduinoFake.h>
 #endif
 
-int pushNmeaLoRaToGnss(McpsIndication_t *mcpsIndication) {
+int pushNmeaLoRaToGnss(char* nmeaData, size_t dataSize) {
     // Không sử dụng tài nguyên chung, không cần mutex
     #ifdef NATIVE_BUILD
     auto& nmeaOut = Serial;
     #else
     auto& nmeaOut = Serial1;
     #endif
-    if (mcpsIndication->BufferSize > 0)
+    if (dataSize > 0)
     {
-        if (mcpsIndication->Buffer == nullptr) {
+        if (nmeaData == nullptr) {
             nmeaOut.println("[NMEA over LoRA] Loi: Buffer rong!");
             return -2;
         }
 
-        nmeaOut.write(mcpsIndication->Buffer, mcpsIndication->BufferSize);
+        nmeaOut.write(nmeaData, dataSize);
         nmeaOut.println("[NMEA over LoRA] Da nhan duoc NMEA qua LoRA, da gui den mach RTK!");
-        nmeaOut.println("[NMEA over LoRA] Kich thuoc du lieu: " + String(mcpsIndication->BufferSize) + " bytes");
-        nmeaOut.println("[NMEA over LoRA] Noi dung du lieu: " + String((char*)mcpsIndication->Buffer));
+        nmeaOut.println("[NMEA over LoRA] Kich thuoc du lieu: " + String(dataSize) + " bytes");
+        nmeaOut.println("[NMEA over LoRA] Noi dung du lieu: " + String(nmeaData));
         return 0;
     }
     nmeaOut.println("[NMEA over LoRA] Loi: Buffer co do dai bang 0!");
