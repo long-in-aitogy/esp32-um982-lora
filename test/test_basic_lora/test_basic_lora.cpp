@@ -44,9 +44,20 @@ void test_receive_real_packet() {
         loraReceive();
         delay(200);
         if (rxSize > 0) {
-            Serial.println("Packet received during test_receive_real_packet:");
-            Serial.println(rxpacket);
+            Serial.println("Packet received during test_receive_real_packet.");
             Serial.printf("Packet size: %d\n", rxSize);
+            Serial.println("Packet content (as string):");
+            Serial.println(rxpacket);
+            Serial.println("Hex dump of received packet:");
+            for (int i = 0; i < rxSize; i++) {
+                Serial.printf("%02X ", static_cast<uint8_t>(rxpacket[i]));
+
+                if ((i + 1) % 16 == 0) {
+                    Serial.println();
+                }
+            }
+            Serial.println();
+
             received = 1;
             break;
         }
