@@ -9,6 +9,7 @@ inline constexpr int RX_TIMEOUT_VALUE = 1000;
 inline constexpr uint8_t BUFFER_SIZE = 255; // Define the payload size here
 
 extern char rxpacket[BUFFER_SIZE];
+extern int16_t rxSize;
 
 void OnRxDone( uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr );
 int loraReceive();

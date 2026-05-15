@@ -9,6 +9,7 @@ inline constexpr int RX_GNSS = 41; // Nối TXD (Hàng dưới) của UM980
 inline constexpr int TX_GNSS = 42; // Nối RXD (Hàng dưới) của UM980
 inline constexpr int GNSS_BAUD = 115200;
 inline constexpr int LED_PIN = 35;
+
 // ================= CẤU HÌNH CÁC TASK =================
 inline constexpr int MUTEX_TIMEOUT_MS = 1500; // Thời gian tối đa để chờ mutex (ms)
 
@@ -32,7 +33,7 @@ inline constexpr char GPRS_PASS[] = "";
 // ================ CẤU HÌNH LORA =================
 #if NMEA_COMMUNICATION_PROTOCOL == LORA_SERIAL
 inline constexpr int RF_FREQUENCY = 915000000; // Hz
-inline constexpr int TX_OUTPUT_POWER = 5;        // dBm
+// inline constexpr int TX_OUTPUT_POWER = 5;        // dBm
 inline constexpr int LORA_BANDWIDTH = 0;         // [0: 125 kHz,
                                                               //  1: 250 kHz,
                                                               //  2: 500 kHz,

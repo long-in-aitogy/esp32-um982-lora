@@ -6,15 +6,14 @@ static bool lora_idle;
 
 static double txNumber;
 
-static int16_t rssi,rxSize;
+static int16_t rssi;
 
 static RadioEvents_t RadioEvents;
 
+int16_t rxSize;
 char rxpacket[BUFFER_SIZE];
 
-int loraSetup( void ) {
-    Mcu.begin(HELTEC_BOARD,SLOW_CLK_TPYE);
-    
+int loraSetup( void ) {   
     txNumber=0;
     rssi=0;
   
@@ -25,6 +24,8 @@ int loraSetup( void ) {
                                LORA_CODINGRATE, 0, LORA_PREAMBLE_LENGTH,
                                LORA_SYMBOL_TIMEOUT, LORA_FIX_LENGTH_PAYLOAD_ON,
                                0, true, false, 0, LORA_IQ_INVERSION_ON, true );
+    
+    lora_idle = true;
     return 0;
 }
 
@@ -47,9 +48,8 @@ void OnRxDone( uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr )
     memcpy(rxpacket, payload, size );
     rxpacket[size]='\0';
     Radio.Sleep( );
-    Serial.printf("\r\n[LoRa RX] Received packet \"%s\" with rssi %d , length %d\r\n",rxpacket,rssi,rxSize);
+    Serial.printf("\r\n[LoRa RX] Received packet with rssi %d , length %d\r\n",rssi,rxSize);
     lora_idle = true;
-    pushNmeaLoRaToGnss(rxpacket, rxSize);
 }
 
 #endif

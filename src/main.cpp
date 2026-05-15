@@ -25,14 +25,19 @@ void healthCheckTask(void* parameter);
 
 void setup()
 {
+    digitalWrite(LED_PIN, HIGH); // LED tắt khi khởi động
     Serial.begin(115200);
+    Mcu.begin(HELTEC_BOARD,SLOW_CLK_TPYE);
     delay(2000);
+    digitalWrite(LED_PIN, LOW); // LED bật sau khi khởi động xong
 
     Serial.println("\n=========================================");
     Serial.println("     ESP32 GNSS GATEWAY KHOI DONG        ");
     Serial.println("=========================================");
 
     // Khởi tạo giao tiếp với UM980
+    delay(1000);
+    digitalWrite(LED_PIN, HIGH); // LED tắt khi khởi động giao tiếp với UM980
     Serial1.begin(GNSS_BAUD, SERIAL_8N1, RX_GNSS, TX_GNSS);
     bool networkConnected = false;
 
@@ -67,6 +72,10 @@ void setup()
         goto connection_init;
     }
 
+    digitalWrite(LED_PIN, LOW);
+    delay(1000);
+    digitalWrite(LED_PIN, HIGH);
+
     Serial.println("[SETUP] Khoi dong cac task...");
 
     Serial.println("[Setup] Tao mutex de dong bo hoa tai nguyen chung");
@@ -98,6 +107,8 @@ void setup()
     xTaskCreatePinnedToCore(healthCheckTask, "Health Task", 4096, NULL, 1, NULL, 1);
     Serial.println("[SETUP] Da khoi dong Task Health!");
 
+    digitalWrite(LED_PIN, LOW);
+
     Serial.println("=========================================");
     Serial.println("        KHOI DONG HOAN TAT               ");
     Serial.println("=========================================\n");
@@ -113,6 +124,20 @@ void taskRtcm(void* parameter) {
         vTaskDelay(pdMS_TO_TICKS(1000));
         #else
         loraReceive();
+        if (rxpacket[0] != '\0' && rxSize > 0) {
+            Serial.print("[LoRa Task] Du lieu nhan duoc: ");
+            for (int i = 0; i < rxSize; i++) {
+                Serial.printf("%02X ", static_cast<uint8_t>(rxpacket[i]));
+
+                if ((i + 1) % 16 == 0) {
+                    Serial.println();
+                }
+            }
+            pushNmeaLoRaToGnss(rxpacket, rxSize);
+        }
+        else {
+            Serial.println("[LoRa Task] Khong co du lieu nhan duoc.");
+        }
         vTaskDelay(pdMS_TO_TICKS(300));
         #endif
     }
