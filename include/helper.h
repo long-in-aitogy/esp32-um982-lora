@@ -4,6 +4,7 @@
 #include "Top_Lvl_Config.h"
 #include "Prog_Config.h"
 #include <Arduino.h>
+// #include <Arduino_FreeRTOS.h>
 
 #if CONNECT_USING_WIFI
 #include "hardware/Wifi_handler.h"
@@ -28,9 +29,11 @@ extern TinyGsm modem;
 // ================= ĐỊNH NGHĨA CÁC BIẾN TOÀN CỤC =================
 extern String latestGGA;
 extern String targetGGA;
+extern bool mqttHealthMode;
 
 // ================= ĐỊNH NGHĨA CÁC HÀM =================
-int sendDeviceHealth();
-int gnssRoverParseAndMqtt();
+String formDeviceHealthString();
+// int roverReadCharFromRtk(String& nmeaBuffer);
+int publishGGA(String& nmeaBuffer);
 
 #endif
