@@ -35,7 +35,7 @@ void test_receive_real_packet() {
     // It is not feasible to automate this test without a controlled environment, so it is commented out.
     // You can manually send a packet and observe the output to verify correct reception.
 
-    Serial.println("The device will first wait for 15 seconds before listening for incoming packets.");
+    Serial.println("The device will first wait for 15 seconds before listening for an incoming packet.");
     delay(15000); // Wait for 15 seconds to allow the tester to send a packet
 
     int received = 0;
