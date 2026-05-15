@@ -36,6 +36,13 @@ void setup()
     Serial1.begin(GNSS_BAUD, SERIAL_8N1, RX_GNSS, TX_GNSS);
     bool networkConnected = false;
 
+    int loraSetupResult = loraSetup();
+    if (loraSetupResult != 0) {
+        Serial.println("[SETUP][ERROR] Khoi dong LoRa that bai! Vui long kiem tra cau hinh va thu lai.");
+    } else {
+        Serial.println("[SETUP] Khoi dong LoRa thanh cong!");
+    }
+
     connection_init:
 #if CONNECT_USING_WIFI
     Serial.println("[SETUP] Su dung ket noi WIFI");
@@ -204,8 +211,10 @@ void healthCheckTask(void* parameter) {
 
 void loop() {
     if (!mqtt.connected()) {
+        digitalWrite(LED_PIN, HIGH);
         Serial.println("[LOOP] MQTT mat ket noi, dang thu ket noi lai...");
         connectMQTT();
+        digitalWrite(LED_PIN, LOW);
     }
     vTaskDelay(pdMS_TO_TICKS(1000)); // loop trống, tất cả logic đã được xử lý trong các task
 }
