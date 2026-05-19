@@ -23,15 +23,18 @@ void test_OnRxDone() {
     uint16_t sampleSize = sizeof(samplePayload) - 1; // exclude null terminator
     int16_t sampleRssi = -70;
     int8_t sampleSnr = 7;
+    memcpy(rxpacket, "", sampleSize);
 
     OnRxDone(samplePayload, sampleSize, sampleRssi, sampleSnr);
 
     TEST_ASSERT_EQUAL(sampleSize, rxSize);
     TEST_ASSERT_EQUAL_STRING("Hello, LoRa!", rxpacket);
+    memcpy(rxpacket, "", sampleSize);
 }
 
 void test_receive_real_packet() {
     Serial.println("Testing loraReceive with a real packet...");
+    loraSetup();
     // This test would require sending a real LoRa packet to the device during the test run.
     // It is not feasible to automate this test without a controlled environment, so it is commented out.
     // You can manually send a packet and observe the output to verify correct reception.
@@ -74,6 +77,10 @@ void setup() {
     UNITY_BEGIN();
     Serial.begin(115200);
     delay(2000);
+
+    // Initialize board hardware as done in production `main()`
+    Mcu.begin(HELTEC_BOARD, SLOW_CLK_TPYE);
+    pinMode(LED_PIN, OUTPUT);
 
     RUN_TEST(test_loraSetup_success);
     RUN_TEST(test_loraReceive_noPacket);

@@ -6,7 +6,7 @@ static bool lora_idle;
 
 static double txNumber;
 
-static int16_t rssi;
+static int16_t rssiValue;
 
 static RadioEvents_t RadioEvents;
 
@@ -15,7 +15,7 @@ char rxpacket[BUFFER_SIZE];
 
 int loraSetup( void ) {   
     txNumber=0;
-    rssi=0;
+    rssiValue=0;
   
     RadioEvents.RxDone = OnRxDone;
     Radio.Init( &RadioEvents );
@@ -43,12 +43,12 @@ int loraReceive()
 
 void OnRxDone( uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr )
 {
-    rssi=rssi;
+    rssiValue=rssi;
     rxSize=size;
     memcpy(rxpacket, payload, size );
     rxpacket[size]='\0';
     Radio.Sleep( );
-    Serial.printf("\r\n[LoRa RX] Received packet with rssi %d , length %d\r\n",rssi,rxSize);
+    Serial.printf("\r\n[LoRa RX] Received packet with rssi %d , length %d\r\n",rssiValue,rxSize);
     lora_idle = true;
 }
 

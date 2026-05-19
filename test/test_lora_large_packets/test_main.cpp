@@ -13,18 +13,20 @@ void test_loraSetup_success() {
 
 void test_receive_large_packets() {
     Serial.println("Testing loraReceive with larger (243-byte) packets...");
+    loraSetup();
     // This test would require sending a real LoRa packet to the device during the test run.
     // It is not feasible to automate this test without a controlled environment, so it is commented out.
     // You can manually send a packet and observe the output to verify correct reception.
 
     Serial.println("The device will first wait for 10 seconds before listening for an incoming packet.");
-    delay(10000); // Wait for 10 seconds to allow the tester to send a packet
+    delay(10010); // Wait for 10 seconds to allow the tester to send a packet
 
     int received = 0;
 
-    for (int i = 0; i < 60; i++) {
+    for (int i = 0; i < 120; i++) {
+        Serial.printf("Listening for packets... (Attempt %d/120)\n", i + 1);
         loraReceive();
-        delay(200);
+        delay(100);
         if (rxSize > 0) {
             Serial.println("Packet received during test_receive_large_packets.");
             Serial.printf("Packet size: %d\n", rxSize);
@@ -43,6 +45,7 @@ void test_receive_large_packets() {
             Serial.println();
 
             received++;
+            rxSize = 0;
             if (received >= 3) {
                 break; // Stop after receiving 3 large packets
             }
@@ -58,6 +61,11 @@ void test_receive_large_packets() {
 void setup() {
     UNITY_BEGIN();
     Serial.begin(115200);
+    delay(2000);
+
+    // Initialize board hardware as done in production `main()`
+    Mcu.begin(HELTEC_BOARD, SLOW_CLK_TPYE);
+    pinMode(LED_PIN, OUTPUT);
     delay(2000);
 
     RUN_TEST(test_loraSetup_success);
