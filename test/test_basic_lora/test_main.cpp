@@ -81,8 +81,8 @@ void setup() {
     RUN_TEST(test_receive_real_packet);
 
     Serial.println("All tests completed. Waiting before ending the test suite.");
-    for (int i = 0; i < 30; i++) {
-        Serial.printf("Ending in %d seconds...\n", 30 - i);
+    for (int i = 0; i < 60; i++) {
+        Serial.printf("Ending in %d seconds...\n", 60 - i);
         digitalWrite(LED_PIN, HIGH);
         delay(500);
         digitalWrite(LED_PIN, LOW);
