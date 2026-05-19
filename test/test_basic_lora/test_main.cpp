@@ -1,9 +1,8 @@
 
 #include <unity.h>
 #include <Arduino.h>
+#include "Top_Lvl_Config.h"
 #include "hardware/Lora_handler.h"
-
-constexpr int LED_PIN = 35;
 
 /*=========== TESTS ============*/
 void test_loraSetup_success() {
