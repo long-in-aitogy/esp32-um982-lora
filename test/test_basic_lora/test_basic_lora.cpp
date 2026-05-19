@@ -3,6 +3,8 @@
 #include <Arduino.h>
 #include "hardware/Lora_handler.h"
 
+constexpr int LED_PIN = 35;
+
 /*=========== TESTS ============*/
 void test_loraSetup_success() {
     Serial.println("Testing loraSetup for successful initialization...");
@@ -79,8 +81,14 @@ void setup() {
     RUN_TEST(test_OnRxDone);
     RUN_TEST(test_receive_real_packet);
 
-    delay(30000);
-    Serial.println("All tests completed. Waiting 30 seconds before ending the test suite.");
+    Serial.println("All tests completed. Waiting before ending the test suite.");
+    for (int i = 0; i < 30; i++) {
+        Serial.printf("Ending in %d seconds...\n", 30 - i);
+        digitalWrite(LED_PIN, HIGH);
+        delay(500);
+        digitalWrite(LED_PIN, LOW);
+        delay(500);
+    }
 
     UNITY_END();
 }
