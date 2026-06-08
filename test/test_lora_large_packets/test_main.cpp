@@ -26,7 +26,7 @@ void test_receive_large_packets() {
     for (int i = 0; i < 120; i++) {
         Serial.printf("Listening for packets... (Attempt %d/120)\n", i + 1);
         loraReceive();
-        delay(100);
+        delay(50);
         if (rxSize > 0) {
             Serial.println("Packet received during test_receive_large_packets.");
             Serial.printf("Packet size: %d\n", rxSize);
@@ -50,7 +50,7 @@ void test_receive_large_packets() {
                 break; // Stop after receiving 3 large packets
             }
         }
-        delay(200); // Wait for a packet to arrive
+        delay(50); // Wait for a packet to arrive
     }
 
     TEST_ASSERT_TRUE(received >= 3); // Assert that at least 3 large packets were received

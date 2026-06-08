@@ -11,6 +11,10 @@
 #define WIFI_LORA_32_V4
 #endif
 
+#ifndef USE_GC1109_PA
+#define USE_GC1109_PA
+#endif
+
 #ifndef LORAWAN_DEBUG_LEVEL
 #define LORAWAN_DEBUG_LEVEL 0
 #endif
