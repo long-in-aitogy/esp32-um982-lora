@@ -41,10 +41,6 @@ void test_receive_large_packets() {
         digitalWrite(LED_PIN, LOW); // Turn off LED after processing
         delay(40); // Short delay to ensure LED state is visible
     }
-
-    digitalWrite(LED_PIN, HIGH); // Ensure LED is off after test
-    delay(100);
-    digitalWrite(LED_PIN, LOW);
 }
 
 /*=========== MAIN FUNCTIONS ============*/
@@ -60,8 +56,12 @@ void setup() {
     pinMode(LED_PIN, OUTPUT);
     delay(2000);
 
-    Serial.println("Testing loraSetup for successful initialization...");
+    Serial.println("Setting up LoRa...");
     int result = loraSetup();
+
+    digitalWrite(LED_PIN, HIGH); // Ensure LED is off after test
+    delay(100);
+    digitalWrite(LED_PIN, LOW);
 }
 
 void loop() {

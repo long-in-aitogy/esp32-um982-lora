@@ -34,11 +34,11 @@ inline constexpr char GPRS_PASS[] = "";
 #if NMEA_COMMUNICATION_PROTOCOL == LORA_SERIAL
 inline constexpr int RF_FREQUENCY = 433000000; // Hz
 // inline constexpr int TX_OUTPUT_POWER = 5;        // dBm
-inline constexpr int LORA_BANDWIDTH = 1;         // [0: 125 kHz,
+inline constexpr int LORA_BANDWIDTH = 0;         // [0: 125 kHz,
                                                               //  1: 250 kHz,
                                                               //  2: 500 kHz,
                                                               //  3: Reserved]
-inline constexpr int LORA_SPREADING_FACTOR = 10;         // [SF7..SF12]
+inline constexpr int LORA_SPREADING_FACTOR = 11;         // [SF7..SF12]
 inline constexpr int LORA_CODINGRATE = 1;         // [1: 4/5,
                                                               //  2: 4/6,
                                                               //  3: 4/7,
