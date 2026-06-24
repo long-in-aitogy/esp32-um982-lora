@@ -27,7 +27,11 @@ void setup()
 {
     digitalWrite(LED_PIN, HIGH); // LED tắt khi khởi động
     Serial.begin(115200);
+
+#ifdef DBOARD_HELTEC
     Mcu.begin(HELTEC_BOARD,SLOW_CLK_TPYE);
+#endif
+
     delay(2000);
     digitalWrite(LED_PIN, LOW); // LED bật sau khi khởi động xong
 
@@ -41,12 +45,14 @@ void setup()
     Serial1.begin(GNSS_BAUD, SERIAL_8N1, RX_GNSS, TX_GNSS);
     bool networkConnected = false;
 
+#ifdef DBOARD_HELTEC
     int loraSetupResult = loraSetup();
     if (loraSetupResult != 0) {
         Serial.println("[SETUP][ERROR] Khoi dong LoRa that bai! Vui long kiem tra cau hinh va thu lai.");
     } else {
         Serial.println("[SETUP] Khoi dong LoRa thanh cong!");
     }
+#endif
 
     connection_init:
 #if CONNECT_USING_WIFI

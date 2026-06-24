@@ -7,12 +7,20 @@
 // ================= CẤU HÌNH KHỞI TẠO =================
 #define PROGRAM_DEBUG 1
 
+#ifdef DBOARD_HELTEC
+
 #ifndef WIFI_LORA_32_V4
 #define WIFI_LORA_32_V4
 #endif
 
+#ifndef USE_GC1109_PA
+#define USE_GC1109_PA
+#endif
+
 #ifndef LORAWAN_DEBUG_LEVEL
 #define LORAWAN_DEBUG_LEVEL 0
+#endif
+
 #endif
 
 #ifndef CONNECT_USING_WIFI

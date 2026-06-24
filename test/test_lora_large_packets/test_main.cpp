@@ -11,41 +11,24 @@ void test_loraSetup_success() {
     TEST_ASSERT_EQUAL(0, result);
 }
 
-void test_loraReceive_noPacket() {
-    Serial.println("Testing loraReceive with no incoming packets...");
-    int result = loraReceive();
-    TEST_ASSERT_EQUAL(0, result);
-}
-
-void test_OnRxDone() {
-    Serial.println("Testing OnRxDone callback with sample data...");
-    uint8_t samplePayload[] = "Hello, LoRa!";
-    uint16_t sampleSize = sizeof(samplePayload) - 1; // exclude null terminator
-    int16_t sampleRssi = -70;
-    int8_t sampleSnr = 7;
-
-    OnRxDone(samplePayload, sampleSize, sampleRssi, sampleSnr);
-
-    TEST_ASSERT_EQUAL(sampleSize, rxSize);
-    TEST_ASSERT_EQUAL_STRING("Hello, LoRa!", rxpacket);
-}
-
-void test_receive_real_packet() {
-    Serial.println("Testing loraReceive with a real packet...");
+void test_receive_large_packets() {
+    Serial.println("Testing loraReceive with larger (243-byte) packets...");
+    loraSetup();
     // This test would require sending a real LoRa packet to the device during the test run.
     // It is not feasible to automate this test without a controlled environment, so it is commented out.
     // You can manually send a packet and observe the output to verify correct reception.
 
-    Serial.println("The device will first wait for 15 seconds before listening for an incoming packet.");
-    delay(15000); // Wait for 15 seconds to allow the tester to send a packet
+    Serial.println("The device will first wait for 10 seconds before listening for an incoming packet.");
+    delay(10010); // Wait for 10 seconds to allow the tester to send a packet
 
     int received = 0;
 
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 120; i++) {
+        Serial.printf("Listening for packets... (Attempt %d/120)\n", i + 1);
         loraReceive();
-        delay(200);
+        delay(50);
         if (rxSize > 0) {
-            Serial.println("Packet received during test_receive_real_packet.");
+            Serial.println("Packet received during test_receive_large_packets.");
             Serial.printf("Packet size: %d\n", rxSize);
             Serial.println("Packet content (as string):");
             Serial.println(rxpacket);
@@ -58,14 +41,19 @@ void test_receive_real_packet() {
                 }
             }
             Serial.println();
+            Serial.print("===================================================\n");
+            Serial.println();
 
-            received = 1;
-            break;
+            received++;
+            rxSize = 0;
+            if (received >= 3) {
+                break; // Stop after receiving 3 large packets
+            }
         }
-        delay(800); // Wait for a packet to arrive
+        delay(50); // Wait for a packet to arrive
     }
 
-    TEST_ASSERT_TRUE(received); // Assert that a packet was received
+    TEST_ASSERT_TRUE(received >= 3); // Assert that at least 3 large packets were received
 }
 
 /*=========== MAIN FUNCTIONS ============*/
@@ -75,14 +63,17 @@ void setup() {
     Serial.begin(115200);
     delay(2000);
 
+    // Initialize board hardware as done in production `main()`
+    Mcu.begin(HELTEC_BOARD, SLOW_CLK_TPYE);
+    pinMode(LED_PIN, OUTPUT);
+    delay(2000);
+
     RUN_TEST(test_loraSetup_success);
-    RUN_TEST(test_loraReceive_noPacket);
-    RUN_TEST(test_OnRxDone);
-    RUN_TEST(test_receive_real_packet);
+    RUN_TEST(test_receive_large_packets);
 
     Serial.println("All tests completed. Waiting before ending the test suite.");
-    for (int i = 0; i < 30; i++) {
-        Serial.printf("Ending in %d seconds...\n", 30 - i);
+    for (int i = 0; i < 60; i++) {
+        Serial.printf("Ending in %d seconds...\n", 60 - i);
         digitalWrite(LED_PIN, HIGH);
         delay(500);
         digitalWrite(LED_PIN, LOW);
