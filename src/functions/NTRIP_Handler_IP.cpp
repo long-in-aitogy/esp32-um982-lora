@@ -29,7 +29,7 @@ int setupNTRIP() {
 }
 
 bool isNtripConnected() {
-  return isIcyOk; // Trả về true nếu đã xác thực thành công với Caster
+  return isIcyOk && ntripClient.connected(); // Chỉ báo true khi app-layer còn mở
 }
 
 int connectNTRIP() {
@@ -37,6 +37,8 @@ int connectNTRIP() {
   Serial.println(NTRIP_CASTER_IP);
 
   ntripClient.stop();
+
+  isIcyOk = false;
 
   if (ntripClient.connect(NTRIP_CASTER_IP, NTRIP_CASTER_PORT)) {
     Serial.println("[NTRIP] Da ket noi TCP! Dang gui Header...");
@@ -54,7 +56,7 @@ int connectNTRIP() {
     }
     ntripClient.print(request);
     
-    // Đợi server trả lời ICY OK
+    // Đợi server trả lời ICY OK / HTTP 200
     unsigned long timeout = millis();
     while (ntripClient.connected() && millis() - timeout < 10000L) {
       if (ntripClient.available()) {
@@ -64,18 +66,20 @@ int connectNTRIP() {
         Serial.println(response);
         
         #if CONNECT_USING_WIFI
-        if (response.indexOf("ICY 200 OK") != -1 || response.indexOf("ICY OK") != -1) {
+        if (response.indexOf("ICY 200 OK") != -1 || response.indexOf("ICY OK") != -1 || response.indexOf("200 OK") != -1) {
           isIcyOk = true;
           isNmeaSent = false;
           Serial.println("[NTRIP] Xac thuc THANH CONG (ICY OK)!");
-          break;
+          return 0;
         }
         #endif
         #if CONNECT_USING_4G
-        isIcyOk = true;
-        isNmeaSent = false;
-        Serial.println("[NTRIP] Xac thuc THANH CONG (ICY OK)!");
-        break;
+        if (response.indexOf("ICY 200 OK") != -1 || response.indexOf("ICY OK") != -1 || response.indexOf("200 OK") != -1) {
+          isIcyOk = true;
+          isNmeaSent = false;
+          Serial.println("[NTRIP] Xac thuc THANH CONG (ICY OK)!");
+          return 0;
+        }
         #endif
       }
       #if PROGRAM_DEBUG
@@ -84,11 +88,14 @@ int connectNTRIP() {
       }
       #endif
     }
+
+    Serial.println("[NTRIP] Caster da dong hoac khong tra loi hop le. Dong socket va thu lai sau.");
+    ntripClient.stop();
+    return -1;
   } else {
     Serial.println("[NTRIP] Loi ket noi TCP socket!");
     return -1;
   }
-  return 0;
 }
 
 int loopNTRIP(String currentGGA) {
@@ -100,10 +107,10 @@ int loopNTRIP(String currentGGA) {
   auto& ntripOutput = Serial1;
 #endif
   // 1. Quản lý mất kết nối
-  if (!ntripClient.connected()) {
+  if (!ntripClient.connected() || !isIcyOk) {
     isIcyOk = false;
     #if PROGRAM_DEBUG
-    Serial.println("[NTRIP] Mat ket noi TCP den Caster. Dang thu ket noi lai...");
+    Serial.println("[NTRIP] App layer TCP den Caster da dong. Dang thu ket noi lai...");
     #endif
     if (millis() - lastReconnect > 7000) { // Thử lại sau 7 giây
       vTaskDelay(pdMS_TO_TICKS(10)); // Chờ 10ms trước khi thử kết nối lại
