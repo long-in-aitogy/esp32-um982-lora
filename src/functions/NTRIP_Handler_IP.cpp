@@ -36,6 +36,8 @@ int connectNTRIP() {
   Serial.print("\n[NTRIP] Dang mo TCP den: ");
   Serial.println(NTRIP_CASTER_IP);
 
+  ntripClient.stop();
+
   if (ntripClient.connect(NTRIP_CASTER_IP, NTRIP_CASTER_PORT)) {
     Serial.println("[NTRIP] Da ket noi TCP! Dang gui Header...");
     
