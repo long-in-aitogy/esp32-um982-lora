@@ -5,12 +5,22 @@
 #define TOP_LVL_CONFIG_H
 
 // ================= CẤU HÌNH KHỞI TẠO =================
+#define PROGRAM_DEBUG 1
+
+#ifdef DBOARD_HELTEC
+
 #ifndef WIFI_LORA_32_V4
 #define WIFI_LORA_32_V4
 #endif
 
+#ifndef USE_GC1109_PA
+#define USE_GC1109_PA
+#endif
+
 #ifndef LORAWAN_DEBUG_LEVEL
 #define LORAWAN_DEBUG_LEVEL 0
+#endif
+
 #endif
 
 #ifndef CONNECT_USING_WIFI
@@ -24,8 +34,8 @@
 #define TCP_IP 0
 #define LORA_SERIAL 1
 
-#ifndef NTRIP_COMMUNICATION_PROTOCOL
-#define NTRIP_COMMUNICATION_PROTOCOL TCP_IP // Chọn giữa TCP_IP hoặc LORA_SERIAL
+#ifndef NMEA_COMMUNICATION_PROTOCOL
+#define NMEA_COMMUNICATION_PROTOCOL TCP_IP // Chọn giữa TCP_IP hoặc LORA_SERIAL
 #endif
 
 // ==== CHỌN 1 TRONG 2 PHƯƠNG THỨC KẾT NỐI (KHÔNG ĐƯỢC CHỌN CẢ HAI) ====

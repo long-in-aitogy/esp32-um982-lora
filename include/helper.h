@@ -4,6 +4,7 @@
 #include "Top_Lvl_Config.h"
 #include "Prog_Config.h"
 #include <Arduino.h>
+// #include <Arduino_FreeRTOS.h>
 
 #if CONNECT_USING_WIFI
 #include "hardware/Wifi_handler.h"
@@ -14,16 +15,25 @@ extern TinyGsm modem;
 #endif
 
 #include "functions/MQTT_Manager.h"
+
+#if NMEA_COMMUNICATION_PROTOCOL == TCP_IP
 #include "functions/NTRIP_Handler_IP.h"
+#else
+#include "hardware/Lora_handler.h"
+#include "functions/Nmea_Handler_LoRa.h"
+#endif
+
 #include "functions/NMEA_Parser.h"
 #include "DataStructs.h"
 
 // ================= ĐỊNH NGHĨA CÁC BIẾN TOÀN CỤC =================
 extern String latestGGA;
 extern String targetGGA;
+extern bool mqttHealthMode;
 
 // ================= ĐỊNH NGHĨA CÁC HÀM =================
-void sendDeviceHealth();
-int gnssRoverParseAndMqtt();
+String formDeviceHealthString();
+// int roverReadCharFromRtk(String& nmeaBuffer);
+int publishGGA(String& nmeaBuffer);
 
 #endif

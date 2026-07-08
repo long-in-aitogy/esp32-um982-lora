@@ -1,32 +1,17 @@
 #ifndef LORA_HANDLER_H
 #define LORA_HANDLER_H
 
-#ifndef LORAWAN_CLASS
-#define LORAWAN_CLASS CLASS_A
-#endif
+#include "LoRaWan_APP.h"
+#include "Arduino.h"
+#include "Prog_Config.h"
 
-#ifndef ACTIVE_REGION
-#define ACTIVE_REGION LORAMAC_REGION_AS923
-#endif
+inline constexpr int RX_TIMEOUT_VALUE = 1000;
+inline constexpr uint8_t BUFFER_SIZE = 255; // Define the payload size here
 
-#ifndef LORAWAN_OTA
-#define LORAWAN_OTA true
-#endif
+extern char rxpacket[BUFFER_SIZE];
+extern int16_t rxSize;
 
-#ifndef LORAWAN_ADR
-#define LORAWAN_ADR true
-#endif
-
-#ifndef LORAWAN_NET_RESERVE
-#define LORAWAN_NET_RESERVE false
-#endif
-
-#ifndef TX_CONFIRMED
-#define TX_CONFIRMED false
-#endif
-
-#include <LoRaWan_APP.h>
-
-void prepareTxFrame( uint8_t port );
-void setupLoraWan();
+void OnRxDone( uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr );
+int loraReceive();
+int loraSetup(void);
 #endif

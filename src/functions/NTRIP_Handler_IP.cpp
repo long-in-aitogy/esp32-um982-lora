@@ -1,4 +1,4 @@
-#if NTRIP_COMMUNICATION_PROTOCOL == TCP_IP
+#if NMEA_COMMUNICATION_PROTOCOL == TCP_IP || defined(UNIT_TEST)
 #define NTRIP_HANDLER_IP_CODE
 
 #include "functions/NTRIP_Handler_IP.h"
@@ -17,23 +17,28 @@ WiFiClient ntripClient;
 #if CONNECT_USING_4G
 #include "hardware/Sim_handler.h"
 extern TinyGsm modem;
-TinyGsmClient ntripClient(modem);
+TinyGsmClient ntripClient(modem, 1);
 #endif
 
 // ================= ĐỊNH NGHĨA HÀM =================
 
-void setupNTRIP() {
+int setupNTRIP() {
   isIcyOk = false;
   isNmeaSent = false;
+  return 0;
 }
 
 bool isNtripConnected() {
-  return isIcyOk; // Trả về true nếu đã xác thực thành công với Caster
+  return isIcyOk && ntripClient.connected(); // Chỉ báo true khi app-layer còn mở
 }
 
-void connectNTRIP() {
+int connectNTRIP() {
   Serial.print("\n[NTRIP] Dang mo TCP den: ");
   Serial.println(NTRIP_CASTER_IP);
+
+  ntripClient.stop();
+
+  isIcyOk = false;
 
   if (ntripClient.connect(NTRIP_CASTER_IP, NTRIP_CASTER_PORT)) {
     Serial.println("[NTRIP] Da ket noi TCP! Dang gui Header...");
@@ -51,37 +56,68 @@ void connectNTRIP() {
     }
     ntripClient.print(request);
     
-    // Đợi server trả lời ICY OK
+    // Đợi server trả lời ICY OK / HTTP 200
     unsigned long timeout = millis();
-    while (ntripClient.connected() && millis() - timeout < 5000) {
+    while (ntripClient.connected() && millis() - timeout < 10000L) {
       if (ntripClient.available()) {
         String response = ntripClient.readStringUntil('\n');
         response.trim();
         Serial.print("[CASTER RESP]: ");
         Serial.println(response);
         
-        if (response.indexOf("ICY 200 OK") != -1 || response.indexOf("ICY OK") != -1) {
+        #if CONNECT_USING_WIFI
+        if (response.indexOf("ICY 200 OK") != -1 || response.indexOf("ICY OK") != -1 || response.indexOf("200 OK") != -1) {
           isIcyOk = true;
           isNmeaSent = false;
           Serial.println("[NTRIP] Xac thuc THANH CONG (ICY OK)!");
-          break;
+          return 0;
         }
+        #endif
+        #if CONNECT_USING_4G
+        if (response.indexOf("ICY 200 OK") != -1 || response.indexOf("ICY OK") != -1 || response.indexOf("200 OK") != -1) {
+          isIcyOk = true;
+          isNmeaSent = false;
+          Serial.println("[NTRIP] Xac thuc THANH CONG (ICY OK)!");
+          return 0;
+        }
+        #endif
       }
+      #if PROGRAM_DEBUG
+      else {
+        Serial.println("[NTRIP] Chua co du lieu. Van dang doi phan hoi tu Caster...");
+      }
+      #endif
     }
+
+    Serial.println("[NTRIP] Caster da dong hoac khong tra loi hop le. Dong socket va thu lai sau.");
+    ntripClient.stop();
+    return -1;
   } else {
     Serial.println("[NTRIP] Loi ket noi TCP socket!");
+    return -1;
   }
 }
 
-void loopNTRIP(String currentGGA) {
+int loopNTRIP(String currentGGA) {
+  // không sử dụng tài nguyên chung, không cần mutex
+  int returnCode = NTRIP_MODE; // returnCode = NTRIP_MODE + ntripClient.available() * 4
+#ifdef UNIT_TEST
+  auto& ntripOutput = Serial;
+#else
+  auto& ntripOutput = Serial1;
+#endif
   // 1. Quản lý mất kết nối
-  if (!ntripClient.connected()) {
+  if (!ntripClient.connected() || !isIcyOk) {
     isIcyOk = false;
+    #if PROGRAM_DEBUG
+    Serial.println("[NTRIP] App layer TCP den Caster da dong. Dang thu ket noi lai...");
+    #endif
     if (millis() - lastReconnect > 7000) { // Thử lại sau 7 giây
+      vTaskDelay(pdMS_TO_TICKS(10)); // Chờ 10ms trước khi thử kết nối lại
       connectNTRIP();
       lastReconnect = millis();
     }
-    return;
+    return 500; // Chưa kết nối, sẽ quay lại ở vòng tiếp theo của loop()
   }
 
   // 2. Xử lý sau khi kết nối thành công
@@ -106,13 +142,34 @@ void loopNTRIP(String currentGGA) {
     if (ntripClient.available()) {
       uint8_t buffer[128];
       int bytesRead = ntripClient.read(buffer, sizeof(buffer));
+
+      #if PROGRAM_DEBUG
+      Serial.println("[NTRIP DOWNLINK] Nhan duoc du lieu RTCM: ");
+      Serial.print("Hex: ");
+      for (int i = 0; i < bytesRead; i++) {
+        Serial.printf("%02X ", buffer[i]);
+      }
+      Serial.println();
+      Serial.print("ASCII: ");
+      for (int i = 0; i < bytesRead; i++) {
+        if (isprint(buffer[i])) {
+          Serial.print((char)buffer[i]);
+        } else {
+          Serial.print("\\0");
+        }
+      }
+      Serial.println();
+      #endif
       
       // Bơm trực tiếp byte thô vào cổng Serial1 cho module định vị
-      Serial1.write(buffer, bytesRead); 
+      ntripOutput.write(buffer, bytesRead); 
       
       // In dấu chấm nhỏ để biết đang nhận RTCM (bỏ comment nếu cần debug)
       // Serial.print("*"); 
+
+      returnCode += 4;
     }
   }
+  return returnCode;
 }
 #endif // NTRIP_HANDLER_IP_CODE

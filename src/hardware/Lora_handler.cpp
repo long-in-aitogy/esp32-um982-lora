@@ -1,35 +1,55 @@
+#if NMEA_COMMUNICATION_PROTOCOL == 1
 #include "hardware/Lora_handler.h"
+#include "functions/Nmea_Handler_LoRa.h"
 
-extern DeviceClass_t loraWanClass = LORAWAN_CLASS;
-extern LoRaMacRegion_t loraWanRegion = ACTIVE_REGION;
+static bool lora_idle;
 
-extern uint8_t devEui[] = { 0x22, 0x32, 0x33, 0x00, 0x00, 0x88, 0x88, 0x02 };
-extern uint8_t appEui[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-extern uint8_t appKey[] = { 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88,
-            0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x66, 0x01 };
-extern uint16_t userChannelsMask[6]={ 0x00FF,0x0000,0x0000,0x0000,0x0000,0x0000 };
-extern uint8_t appPort = 2;
-extern uint8_t confirmedNbTrials = 4;
+static double txNumber;
 
-extern bool overTheAirActivation = LORAWAN_OTA;
-extern bool loraWanAdr = LORAWAN_ADR;
-extern bool keepNet = LORAWAN_NET_RESERVE;
-extern bool isTxConfirmed = TX_CONFIRMED;
+static int16_t rssiValue;
 
-void prepareTxFrame( uint8_t port )
-{
-    appDataSize = 4;
-    appData[0] = 0x00;
-    appData[1] = 0x01;
-    appData[2] = 0x02;
-    appData[3] = 0x03;
+static RadioEvents_t RadioEvents;
+
+int16_t rxSize;
+char rxpacket[BUFFER_SIZE];
+
+int loraSetup( void ) {   
+    txNumber=0;
+    rssiValue=0;
+  
+    RadioEvents.RxDone = OnRxDone;
+    Radio.Init( &RadioEvents );
+    Radio.SetChannel( RF_FREQUENCY );
+    Radio.SetRxConfig( MODEM_LORA, LORA_BANDWIDTH, LORA_SPREADING_FACTOR,
+                               LORA_CODINGRATE, 0, LORA_PREAMBLE_LENGTH,
+                               LORA_SYMBOL_TIMEOUT, LORA_FIX_LENGTH_PAYLOAD_ON,
+                               0, true, false, 0, LORA_IQ_INVERSION_ON, true );
+    
+    lora_idle = true;
+    return 0;
 }
 
-void setupLoraWan()
+int loraReceive()
 {
-    #ifdef DUMP_AT_COMMANDS
-	enableAt();
-    #endif
-	deviceState = DEVICE_STATE_INIT;
-	LoRaWAN.ifskipjoin();
+  if(lora_idle)
+  {
+    lora_idle = false;
+    Serial.println("[LoRa RX] Entering RX mode");
+    Radio.Rx(0);
+  }
+  Radio.IrqProcess( );
+  return 0;
 }
+
+void OnRxDone( uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr )
+{
+    rssiValue=rssi;
+    rxSize=size;
+    memcpy(rxpacket, payload, size );
+    rxpacket[size]='\0';
+    Radio.Sleep( );
+    Serial.printf("\r\n[LoRa RX] Received packet with rssi %d , length %d\r\n",rssiValue,rxSize);
+    lora_idle = true;
+}
+
+#endif
