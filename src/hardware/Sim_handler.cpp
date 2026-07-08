@@ -18,11 +18,14 @@ bool startSIM() {
     
     int retrys = 1;
 
+    digitalWrite(LED_PIN, HIGH);
     pinMode(MODEM_DC_PIN, OUTPUT);
     digitalWrite(MODEM_DC_PIN, HIGH);
     delay(1000);
     digitalWrite(MODEM_DC_PIN, LOW);
-    delay(1000);
+    SerialMon.println("[GSM] Doi modem SIM/GSM khoi dong (khoang 8 giay)...");
+    delay(8000);
+    digitalWrite(LED_PIN, LOW);
 
     SerialMon.println("[GSM] Khoi tao modem... So lan thu: " + String(retrys));
     

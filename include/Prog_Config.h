@@ -71,11 +71,16 @@ inline constexpr uint16_t NTRIP_CASTER_PORT = 2101;
 #define NTRIP_LORA_SERIAL_CONFIG
 #endif
 
-// inline constexpr char NTRIP_MOUNTPOINT[] = "/humga";
+#ifdef PROGRAM_TEST
 inline constexpr char NTRIP_MOUNTPOINT[] = "/test";
-// Base64 của "trung:12345"
-// inline constexpr char NTRIP_AUTH[] = "dHJ1bmc6MTIzNDU=";
 inline constexpr char NTRIP_AUTH[] = "YWl0b2d5OmFpdG9neQ==";
+// inline constexpr char NTRIP_AUTH_BASE_STATION[] = "12345";
+#else
+inline constexpr char NTRIP_MOUNTPOINT[] = "/humga";
+// Base64 của "trung:12345"
+inline constexpr char NTRIP_AUTH[] = "dHJ1bmc6MTIzNDU=";
+inline constexpr char NTRIP_AUTH_BASE_STATION[] = "12345";
+#endif
 
 // ================ CẤU HÌNH MQTT =================
 

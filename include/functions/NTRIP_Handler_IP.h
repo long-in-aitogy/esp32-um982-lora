@@ -13,4 +13,13 @@ int loopNTRIP(String currentGGA);
 int connectNTRIP();
 bool isNtripConnected(); // Thêm hàm lấy trạng thái NTRIP
 
+#if CONNECT_USING_WIFI
+#include "hardware/Wifi_handler.h"
+extern WiFiClient ntripClient;
+#endif
+#if CONNECT_USING_4G
+#include "hardware/Sim_handler.h"
+extern TinyGsmClient ntripClient;
+#endif
+
 #endif

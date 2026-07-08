@@ -46,9 +46,9 @@ void setup()
     Serial1.begin(GNSS_BAUD, SERIAL_8N1, RX_GNSS, TX_GNSS);
     bool networkConnected = false;
 
-    #ifndef NATIVE_BUILD
+    #if (!defined(NATIVE_BUILD) && CONNECT_USING_4G)
     SerialAT.begin(115200, SERIAL_8N1, RX_TO_MODEM_TX, TX_TO_MODEM_RX);
-    delay(6000);
+    delay(8000);
     #endif
 
 #ifdef DBOARD_HELTEC
@@ -76,10 +76,11 @@ void setup()
 #endif
     if (networkConnected) {
         Serial.println("[SETUP] Ket noi mang thanh cong!");
-        setupMQTT();
         #if NMEA_COMMUNICATION_PROTOCOL == TCP_IP
         setupNTRIP();
+        connectNTRIP();
         #endif
+        setupMQTT();
     } else {
         Serial.println("[ERROR] Khong the ket noi mang. Vui long kiem tra cau hinh va thu lai.");
         goto connection_init;
@@ -224,30 +225,51 @@ void healthCheckTask(void* parameter) {
         Serial.print("[HEALTH CHECK] ");
         Serial.println(healthPayload);
 
-        if (healthPayload.length() > 0) {
+        #if PROGRAM_DEBUG
+        Serial.println("[HEALTH CHECK] Kiem tra ket noi MQTT va du lieu de gui thong tin suc khoe...");
+        #endif
+        if (mqtt.connected() && !healthPayload.isEmpty()) {
             if (xSemaphoreTake(mqttClientMutex, pdMS_TO_TICKS(MUTEX_TIMEOUT_MS)))
             {
                 #if PROGRAM_DEBUG
-                Serial.println("[HEALTH CHECK] Kiem tra ket noi MQTT de gui thong tin suc khoe...");
+                Serial.println("[HEALTH CHECK] MQTT dang ket noi, dang kich hoat loop...");
                 #endif
-                if (mqtt.connected()) {
-                    #if PROGRAM_DEBUG
-                    Serial.println("[HEALTH CHECK] MQTT dang ket noi, dang kich hoat loop...");
-                    #endif
-                    mqtt.loop();
-                    #if PROGRAM_DEBUG
-                    Serial.println("[HEALTH CHECK] Dang gui thong tin suc khoe len MQTT...");
-                    #endif
-                    publishHealth(healthPayload);
-                }
+
+                mqtt.loop();
+
+                #if PROGRAM_DEBUG
+                Serial.println("[HEALTH CHECK] Dang gui thong tin suc khoe len MQTT...");
+                #endif
+                
+                publishHealth(healthPayload);
                 xSemaphoreGive(mqttClientMutex);
             }
+        }
+        else {
+            vTaskDelay(pdMS_TO_TICKS(5000)); // Nếu không có dữ liệu sức khỏe, chờ 1 giây trước khi kiểm tra lại
         }
         vTaskDelay(pdMS_TO_TICKS(HEALTH_INTERVAL));
     }
 }
 
 void loop() {
+    #if CONNECT_USING_4G
+    if (!modem.isGprsConnected()) {
+        digitalWrite(LED_PIN, HIGH);
+        Serial.println("[LOOP] GPRS mat ket noi, dang thu ket noi lai...");
+        ntripClient.stop(0);
+        connectGSM();
+        digitalWrite(LED_PIN, LOW);
+    }
+    #endif
+    #if CONNECT_USING_WIFI
+    if (WiFiClass::status() != WL_CONNECTED) {
+        digitalWrite(LED_PIN, HIGH);
+        Serial.println("[LOOP] WiFi mat ket noi, dang thu ket noi lai...");
+        setupWiFi();
+        digitalWrite(LED_PIN, LOW);
+    }
+    #endif
     if (!mqtt.connected()) {
         digitalWrite(LED_PIN, HIGH);
         Serial.println("[LOOP] MQTT mat ket noi, dang thu ket noi lai...");
