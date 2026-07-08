@@ -8,18 +8,31 @@
 
 #ifdef DUMP_AT_COMMANDS
 #include <StreamDebugger.h>
-static StreamDebugger debugger(SerialAT, SerialMon);
+StreamDebugger debugger(SerialAT, SerialMon);
 TinyGsm        modem(debugger);
 #else
-TinyGsm        modem(Serial);
+TinyGsm        modem(SerialAT);
 #endif
 
 bool startSIM() {
+    
     int retrys = 1;
+
+    digitalWrite(LED_PIN, HIGH);
+    pinMode(MODEM_DC_PIN, OUTPUT);
+    digitalWrite(MODEM_DC_PIN, HIGH);
+    delay(1000);
+    digitalWrite(MODEM_DC_PIN, LOW);
+    SerialMon.println("[GSM] Doi modem SIM/GSM khoi dong (khoang 8 giay)...");
+    delay(8000);
+    digitalWrite(LED_PIN, LOW);
+
     SerialMon.println("[GSM] Khoi tao modem... So lan thu: " + String(retrys));
+    
     #ifndef NATIVE_BUILD
-    modem.restart();
+    modem.init();
     #endif
+
     String modemInfo = modem.getModemInfo();
     while (modemInfo.length() == 0) {
         if (retrys > 10) {
@@ -37,10 +50,7 @@ bool startSIM() {
     }
     SerialMon.print("[GSM] Khoi dong modem thanh cong.Thong tin modem: ");
     SerialMon.println(modemInfo);
-
-    #ifndef NATIVE_BUILD
-    SerialAT.begin(115200, SERIAL_8N1, RX_TO_MODEM_TX, TX_TO_MODEM_RX);
-    #endif
+    digitalWrite(LED_PIN, LOW);
 
     delay(3000);
     return true;
@@ -52,7 +62,20 @@ bool connectGSM() {
         SerialMon.println("[GSM] Dang ket noi mang GSM...");
         if (modem.isNetworkConnected()) {
             SerialMon.println("[GSM] Mang GSM da ket noi.");
-            return true;
+
+            if (modem.isGprsConnected()) {
+                SerialMon.println("[GSM] Du lieu di dong da san sang.");
+                return true;
+            }
+
+            SerialMon.print("[GSM] Dang mo PDP context voi APN: ");
+            SerialMon.println(APN);
+            if (modem.gprsConnect(APN, GPRS_USER, GPRS_PASS)) {
+                SerialMon.println("[GSM] GPRS/PDP da ket noi thanh cong.");
+                return true;
+            }
+
+            SerialMon.println("[GSM] Mo GPRS/PDP that bai. Dang thu lai...");
         }
         while (!modem.waitForNetwork(60000)) {
             SerialMon.println("[GSM] Ket noi mang GSM that bai. Dang thu lai... So lan thu: " + String(retries));
