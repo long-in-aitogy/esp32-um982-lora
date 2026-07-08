@@ -62,7 +62,20 @@ bool connectGSM() {
         SerialMon.println("[GSM] Dang ket noi mang GSM...");
         if (modem.isNetworkConnected()) {
             SerialMon.println("[GSM] Mang GSM da ket noi.");
-            return true;
+
+            if (modem.isGprsConnected()) {
+                SerialMon.println("[GSM] Du lieu di dong da san sang.");
+                return true;
+            }
+
+            SerialMon.print("[GSM] Dang mo PDP context voi APN: ");
+            SerialMon.println(APN);
+            if (modem.gprsConnect(APN, GPRS_USER, GPRS_PASS)) {
+                SerialMon.println("[GSM] GPRS/PDP da ket noi thanh cong.");
+                return true;
+            }
+
+            SerialMon.println("[GSM] Mo GPRS/PDP that bai. Dang thu lai...");
         }
         while (!modem.waitForNetwork(60000)) {
             SerialMon.println("[GSM] Ket noi mang GSM that bai. Dang thu lai... So lan thu: " + String(retries));
