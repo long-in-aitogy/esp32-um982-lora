@@ -17,7 +17,7 @@ WiFiClient ntripClient;
 #if CONNECT_USING_4G
 #include "hardware/Sim_handler.h"
 extern TinyGsm modem;
-TinyGsmClient ntripClient(modem);
+TinyGsmClient ntripClient(modem, 1);
 #endif
 
 // ================= ĐỊNH NGHĨA HÀM =================
@@ -68,6 +68,11 @@ int connectNTRIP() {
           break;
         }
       }
+      #if PROGRAM_DEBUG
+      else {
+        Serial.println("[NTRIP] Chu co du lieu. Van dang doi phan hoi tu Caster...");
+      }
+      #endif
     }
   } else {
     Serial.println("[NTRIP] Loi ket noi TCP socket!");
