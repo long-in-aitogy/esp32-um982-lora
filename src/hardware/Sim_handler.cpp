@@ -8,18 +8,28 @@
 
 #ifdef DUMP_AT_COMMANDS
 #include <StreamDebugger.h>
-static StreamDebugger debugger(SerialAT, SerialMon);
+StreamDebugger debugger(SerialAT, SerialMon);
 TinyGsm        modem(debugger);
 #else
-TinyGsm        modem(Serial);
+TinyGsm        modem(SerialAT);
 #endif
 
 bool startSIM() {
+    
     int retrys = 1;
+
+    pinMode(MODEM_DC_PIN, OUTPUT);
+    digitalWrite(MODEM_DC_PIN, HIGH);
+    delay(1000);
+    digitalWrite(MODEM_DC_PIN, LOW);
+    delay(1000);
+
     SerialMon.println("[GSM] Khoi tao modem... So lan thu: " + String(retrys));
+    
     #ifndef NATIVE_BUILD
-    modem.restart();
+    modem.init();
     #endif
+
     String modemInfo = modem.getModemInfo();
     while (modemInfo.length() == 0) {
         if (retrys > 10) {
@@ -37,10 +47,7 @@ bool startSIM() {
     }
     SerialMon.print("[GSM] Khoi dong modem thanh cong.Thong tin modem: ");
     SerialMon.println(modemInfo);
-
-    #ifndef NATIVE_BUILD
-    SerialAT.begin(115200, SERIAL_8N1, RX_TO_MODEM_TX, TX_TO_MODEM_RX);
-    #endif
+    digitalWrite(LED_PIN, LOW);
 
     delay(3000);
     return true;

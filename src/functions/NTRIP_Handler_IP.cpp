@@ -116,6 +116,24 @@ int loopNTRIP(String currentGGA) {
     if (ntripClient.available()) {
       uint8_t buffer[128];
       int bytesRead = ntripClient.read(buffer, sizeof(buffer));
+
+      #if PROGRAM_DEBUG
+      Serial.println("[NTRIP DOWNLINK] Nhan duoc du lieu RTCM: ");
+      Serial.print("Hex: ");
+      for (int i = 0; i < bytesRead; i++) {
+        Serial.printf("%02X ", buffer[i]);
+      }
+      Serial.println();
+      Serial.print("ASCII: ");
+      for (int i = 0; i < bytesRead; i++) {
+        if (isprint(buffer[i])) {
+          Serial.print((char)buffer[i]);
+        } else {
+          Serial.print("\\0");
+        }
+      }
+      Serial.println();
+      #endif
       
       // Bơm trực tiếp byte thô vào cổng Serial1 cho module định vị
       ntripOutput.write(buffer, bytesRead); 

@@ -25,6 +25,7 @@ void healthCheckTask(void* parameter);
 
 void setup()
 {
+    pinMode(LED_PIN, OUTPUT);
     digitalWrite(LED_PIN, HIGH); // LED tắt khi khởi động
     Serial.begin(115200);
 
@@ -45,6 +46,11 @@ void setup()
     Serial1.begin(GNSS_BAUD, SERIAL_8N1, RX_GNSS, TX_GNSS);
     bool networkConnected = false;
 
+    #ifndef NATIVE_BUILD
+    SerialAT.begin(115200, SERIAL_8N1, RX_TO_MODEM_TX, TX_TO_MODEM_RX);
+    delay(6000);
+    #endif
+
 #ifdef DBOARD_HELTEC
     int loraSetupResult = loraSetup();
     if (loraSetupResult != 0) {
@@ -62,6 +68,7 @@ void setup()
 #if CONNECT_USING_4G
     Serial.println("[SETUP] Su dung ket noi SIM/GSM");
     if (startSIM()) {
+        digitalWrite(LED_PIN, HIGH);
         if (connectGSM()) {
             networkConnected = true;
         }
